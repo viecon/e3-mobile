@@ -6,6 +6,7 @@ export function NotificationsPage() {
   const [notifs, setNotifs] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     getNotifications().then(setNotifs).catch(() => {}).finally(() => setLoading(false));
@@ -76,23 +77,31 @@ export function NotificationsPage() {
         <p className="text-sm text-e3-muted text-center py-12">沒有通知</p>
       ) : (
         <div className="space-y-1">
-          {filtered.map(n => (
-            <div
-              key={n.id}
-              className={`p-4 rounded-xl transition-colors ${n.read ? 'bg-e3-card' : 'bg-e3-accent/10'}`}
-            >
-              <p className={`text-sm ${n.read ? 'text-e3-muted' : 'text-e3-text font-medium'}`}>
-                {n.subject}
-              </p>
-              {n.courseName && (
-                <p className="text-xs text-e3-accent mt-1">
-                  {n.courseName.split('.').pop()?.trim()}
+          {filtered.map(n => {
+            const isOpen = expanded.has(n.id);
+            return (
+              <div
+                key={n.id}
+                onClick={() => setExpanded(prev => {
+                  const next = new Set(prev);
+                  if (next.has(n.id)) next.delete(n.id); else next.add(n.id);
+                  return next;
+                })}
+                className={`p-4 rounded-xl transition-colors cursor-pointer active:bg-e3-border ${n.read ? 'bg-e3-card' : 'bg-e3-accent/10'}`}
+              >
+                <p className={`text-sm ${n.read ? 'text-e3-muted' : 'text-e3-text font-medium'}`}>
+                  {n.subject}
                 </p>
-              )}
-              <p className="text-xs text-e3-muted mt-1 line-clamp-1">{n.message}</p>
-              <p className="text-[10px] text-e3-muted/60 mt-1.5">{formatDateTime(n.time)}</p>
-            </div>
-          ))}
+                {n.courseName && (
+                  <p className="text-xs text-e3-accent mt-1">
+                    {n.courseName.split('.').pop()?.trim()}
+                  </p>
+                )}
+                <p className={`text-xs text-e3-muted mt-1 ${isOpen ? '' : 'line-clamp-1'}`}>{n.message}</p>
+                <p className="text-[10px] text-e3-muted/60 mt-1.5">{formatDateTime(n.time)}</p>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

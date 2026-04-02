@@ -27,7 +27,7 @@ iPhone Safari → PWA (GitHub Pages) → Cloudflare Worker (CORS proxy) → E3 R
 
 1. 在 iPhone Safari 開啟 `https://viecon.github.io/e3-mobile/`
 2. 登入：
-   - Proxy URL: `https://e3-proxy.twshawn28e7.workers.dev`
+   - Proxy URL: `https://e3-proxy.<your-subdomain>.workers.dev`
    - E3 帳號 + 密碼
 3. 分享 → 加入主畫面
 
@@ -52,7 +52,7 @@ npx wrangler login   # 第一次需要
 npx wrangler deploy  # 部署到 workers.dev
 ```
 需要 Node 22+（用 `fnm use 22`）。
-Worker URL: `https://e3-proxy.twshawn28e7.workers.dev`
+Worker URL: `https://e3-proxy.<your-subdomain>.workers.dev`
 
 ## 專案結構
 

@@ -24,6 +24,11 @@ export function setCache<T>(key: string, data: T): void {
   } catch { /* quota exceeded, ignore */ }
 }
 
+export function clearAll(): void {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith(PREFIX));
+  for (const k of keys) localStorage.removeItem(k);
+}
+
 export function isFresh(key: string): boolean {
   try {
     const raw = localStorage.getItem(PREFIX + key);

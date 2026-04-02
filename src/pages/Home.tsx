@@ -5,7 +5,6 @@ import { getPendingAssignments, getNews, type Assignment } from '@/api/moodle';
 import { AssignmentCard } from '@/components/AssignmentCard';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { formatDate } from '@/lib/time';
-import { cycleTheme, getTheme, themeLabel } from '@/lib/theme';
 import * as storage from '@/lib/storage';
 import { getCached, setCache } from '@/lib/cache';
 
@@ -22,7 +21,6 @@ export function HomePage() {
   const [news, setNews] = useState<NewsItem[]>(cachedNews ?? []);
   const [loading, setLoading] = useState(cachedAssignments === null);
   const [expandedNews, setExpandedNews] = useState<Set<number>>(new Set());
-  const [theme, setThemeState] = useState(getTheme());
   const navigate = useNavigate();
   const fullname = storage.get('fullname') || '';
 
@@ -63,10 +61,13 @@ export function HomePage() {
             </svg>
           </button>
           <button
-            onClick={() => setThemeState(cycleTheme())}
-            className="text-[13px] text-e3-muted bg-e3-card px-2.5 py-1 rounded-full cursor-pointer active:opacity-60"
+            onClick={() => navigate('/settings')}
+            className="text-e3-muted bg-e3-card w-8 h-8 rounded-full flex items-center justify-center cursor-pointer active:opacity-60"
           >
-            {themeLabel[theme]}
+            <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
           </button>
         </div>
       </div>

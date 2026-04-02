@@ -205,7 +205,7 @@ export function CourseDetailPage() {
                                   'bg-e3-bg text-e3-muted'
                                 }`}>{ext || 'file'}</span>
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-[15px] text-e3-text truncate">{m.name || f.filename}</p>
+                                  <p className="text-[15px] text-e3-text truncate">{files.length > 1 ? f.filename : m.name || f.filename}</p>
                                   <p className="text-[11px] text-e3-muted">{fileSize(f.filesize)}</p>
                                 </div>
                                 <svg className="w-4 h-4 text-e3-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

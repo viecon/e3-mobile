@@ -135,7 +135,7 @@ export async function getNotifications(): Promise<Notification[]> {
     getCourses().catch(() => [] as { id: number; shortname: string; fullname: string }[]),
   ]);
 
-  return result.messages.map(m => {
+  return result.messages.filter(m => !m.subject.includes('新登入紀錄')).map(m => {
     // Try to match course from subject (e.g. "1142.515605：公告...")
     let courseName: string | null = null;
     let courseShortname: string | null = null;

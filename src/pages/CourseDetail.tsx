@@ -4,6 +4,17 @@ import { getCourseNews, getCourseAssignments, getCourseContent, type Assignment,
 import { AssignmentCard } from '@/components/AssignmentCard';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { formatDate } from '@/lib/time';
+import * as storage from '@/lib/storage';
+
+function fileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function fileExt(filename: string): string {
+  return filename.split('.').pop()?.toLowerCase() || '';
+}
 
 function stripHtml(html: string): string {
   return html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
@@ -137,37 +148,76 @@ export function CourseDetailPage() {
           )}
 
           {/* Content tab */}
-          {tab === 'content' && (
-            sections.filter(s => s.modules.length > 0).length === 0 ? (
+          {tab === 'content' && (() => {
+            const token = storage.getToken() || '';
+            const nonEmpty = sections.filter(s => s.modules.length > 0);
+            return nonEmpty.length === 0 ? (
               <div className="bg-e3-card rounded-xl px-4 py-8">
                 <p className="text-[15px] text-e3-muted text-center">沒有教材</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {sections.filter(s => s.modules.length > 0).map(s => (
+                {nonEmpty.map(s => (
                   <div key={s.id}>
                     {s.name && (
                       <h3 className="text-[13px] font-medium text-e3-muted uppercase tracking-wide mb-2 px-1">{s.name}</h3>
                     )}
                     <div className="bg-e3-card rounded-xl overflow-hidden divide-y divide-e3-separator">
-                      {s.modules.map(m => (
-                        <a
-                          key={m.id}
-                          href={m.url || '#'}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 px-4 py-2.5 cursor-pointer active:bg-e3-bg transition-colors"
-                        >
-                          <span className="text-[11px] text-e3-muted bg-e3-bg rounded px-1.5 py-0.5 shrink-0">{m.modname}</span>
-                          <span className="text-[15px] text-e3-text min-w-0 flex-1">{m.name}</span>
-                        </a>
-                      ))}
+                      {s.modules.map(m => {
+                        const files = m.contents?.filter(c => c.filesize > 0) || [];
+                        if (files.length > 0) {
+                          return files.map((f, fi) => {
+                            const url = f.fileurl.includes('?')
+                              ? `${f.fileurl}&token=${token}`
+                              : `${f.fileurl}?token=${token}`;
+                            const ext = fileExt(f.filename);
+                            return (
+                              <a
+                                key={`${m.id}-${fi}`}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 px-4 py-2.5 cursor-pointer active:bg-e3-bg transition-colors"
+                              >
+                                <span className={`text-[11px] font-medium rounded px-1.5 py-0.5 shrink-0 uppercase ${
+                                  ext === 'pdf' ? 'bg-e3-danger/10 text-e3-danger' :
+                                  ['pptx', 'ppt'].includes(ext) ? 'bg-e3-warning/10 text-e3-warning' :
+                                  ['doc', 'docx'].includes(ext) ? 'bg-e3-accent/10 text-e3-accent' :
+                                  'bg-e3-bg text-e3-muted'
+                                }`}>{ext || 'file'}</span>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[15px] text-e3-text truncate">{m.name || f.filename}</p>
+                                  <p className="text-[11px] text-e3-muted">{fileSize(f.filesize)}</p>
+                                </div>
+                                <svg className="w-4 h-4 text-e3-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                              </a>
+                            );
+                          });
+                        }
+                        return (
+                          <a
+                            key={m.id}
+                            href={m.url || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 px-4 py-2.5 cursor-pointer active:bg-e3-bg transition-colors"
+                          >
+                            <span className="text-[11px] text-e3-muted bg-e3-bg rounded px-1.5 py-0.5 shrink-0">{m.modname}</span>
+                            <span className="text-[15px] text-e3-text min-w-0 flex-1">{m.name}</span>
+                            <svg className="w-4 h-4 text-e3-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </a>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
               </div>
-            )
-          )}
+            );
+          })()}
         </>
       )}
     </div>

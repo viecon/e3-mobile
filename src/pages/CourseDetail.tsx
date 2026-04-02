@@ -4,7 +4,6 @@ import { getCourseNews, getCourseAssignments, getCourseContent, type Assignment,
 import { AssignmentCard } from '@/components/AssignmentCard';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { formatDate } from '@/lib/time';
-import * as storage from '@/lib/storage';
 
 function stripHtml(html: string): string {
   return html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();

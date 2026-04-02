@@ -6,7 +6,7 @@ class MoodleApiError extends Error {
   }
 }
 
-async function call<T>(wsfunction: string, params: Record<string, string | number> = {}): Promise<T> {
+async function rawCall<T>(wsfunction: string, params: Record<string, string | number> = {}): Promise<T> {
   const proxyUrl = storage.getProxyUrl();
   const token = storage.getToken();
   if (!proxyUrl || !token) throw new MoodleApiError('no_auth', 'Not logged in');
@@ -32,6 +32,40 @@ async function call<T>(wsfunction: string, params: Record<string, string | numbe
   }
 }
 
+let refreshing: Promise<void> | null = null;
+
+async function tryAutoRelogin(): Promise<boolean> {
+  const proxyUrl = storage.getProxyUrl();
+  const username = storage.get('username');
+  const password = storage.get('password');
+  if (!proxyUrl || !username || !password) return false;
+
+  try {
+    const loginUrl = `${proxyUrl}/login/token.php`;
+    const body = new URLSearchParams({ username, password, service: 'moodle_mobile_app' });
+    const res = await fetch(loginUrl, { method: 'POST', body });
+    const data = await res.json() as { token?: string };
+    if (!data.token) return false;
+    storage.set('token', data.token);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function call<T>(wsfunction: string, params: Record<string, string | number> = {}): Promise<T> {
+  try {
+    return await rawCall<T>(wsfunction, params);
+  } catch (err) {
+    if (err instanceof MoodleApiError && err.code === 'invalidtoken') {
+      if (!refreshing) refreshing = tryAutoRelogin().then(ok => { refreshing = null; if (!ok) throw err; });
+      await refreshing;
+      return rawCall<T>(wsfunction, params);
+    }
+    throw err;
+  }
+}
+
 export async function login(proxyUrl: string, username: string, password: string): Promise<{ token: string; fullname: string; userid: number }> {
   const loginUrl = `${proxyUrl}/login/token.php`;
   const body = new URLSearchParams({ username, password, service: 'moodle_mobile_app' });
@@ -41,9 +75,11 @@ export async function login(proxyUrl: string, username: string, password: string
 
   if (!data.token) throw new MoodleApiError('login_failed', data.error ?? 'Login failed');
 
-  // Save and verify
+  // Save credentials for auto-relogin and verify
   storage.set('token', data.token);
   storage.set('proxyUrl', proxyUrl);
+  storage.set('username', username);
+  storage.set('password', password);
 
   const info = await call<{ userid: number; fullname: string }>('core_webservice_get_site_info');
   storage.set('userid', String(info.userid));

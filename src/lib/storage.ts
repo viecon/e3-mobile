@@ -34,4 +34,6 @@ export function logout(): void {
   remove('userid');
   remove('fullname');
   remove('proxyUrl');
+  remove('username');
+  remove('password');
 }

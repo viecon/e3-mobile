@@ -87,13 +87,13 @@ export async function getNews(): Promise<{ subject: string; message: string; aut
   const forums = await call<{ id: number; type: string }[]>('mod_forum_get_forums_by_courses', params);
   const newsForums = forums.filter(f => f.type === 'news');
 
-  const since = Math.floor(Date.now() / 1000) - 14 * 86400;
+  const since = Math.floor(Date.now() / 1000) - 30 * 86400;
   const allNews: { subject: string; message: string; author: string; time: number }[] = [];
 
-  for (const forum of newsForums.slice(0, 5)) {
+  for (const forum of newsForums) {
     const result = await call<{ discussions: { subject: string; message: string; userfullname: string; timemodified: number }[] }>(
       'mod_forum_get_forum_discussions',
-      { forumid: forum.id, sortorder: -1, page: 0, perpage: 5 },
+      { forumid: forum.id, sortorder: -1, page: 0, perpage: 10 },
     );
     for (const d of result.discussions) {
       if (d.timemodified < since) continue;

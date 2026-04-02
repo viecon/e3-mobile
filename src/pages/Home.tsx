@@ -5,10 +5,15 @@ import { AssignmentCard } from '@/components/AssignmentCard';
 import { formatDate } from '@/lib/time';
 import * as storage from '@/lib/storage';
 
+function stripHtml(html: string): string {
+  return html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
+}
+
 export function HomePage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [news, setNews] = useState<{ subject: string; author: string; time: number }[]>([]);
+  const [news, setNews] = useState<{ subject: string; message: string; author: string; time: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedNews, setExpandedNews] = useState<Set<number>>(new Set());
   const fullname = storage.get('fullname') || '';
 
   useEffect(() => { load(); }, []);
@@ -21,7 +26,7 @@ export function HomePage() {
         getNews().catch(() => []),
       ]);
       setAssignments(a);
-      setNews(n.slice(0, 3));
+      setNews(n);
     } catch {
       // ignore
     }
@@ -73,17 +78,34 @@ export function HomePage() {
       {/* News */}
       {news.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-e3-text mb-3">最新公告</h2>
+          <h2 className="text-sm font-semibold text-e3-text mb-3">最新公告 ({news.length})</h2>
           <div className="space-y-2">
-            {news.map((n, i) => (
-              <div key={i} className="bg-e3-card rounded-xl p-4">
-                <p className="text-sm text-e3-text">{n.subject}</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-xs text-e3-muted">{n.author}</span>
-                  <span className="text-xs text-e3-muted">{formatDate(n.time)}</span>
+            {news.map((n, i) => {
+              const isOpen = expandedNews.has(i);
+              const body = stripHtml(n.message);
+              return (
+                <div
+                  key={i}
+                  className="bg-e3-card rounded-xl p-4 cursor-pointer active:bg-e3-border transition-colors"
+                  onClick={() => setExpandedNews(prev => {
+                    const next = new Set(prev);
+                    if (next.has(i)) next.delete(i); else next.add(i);
+                    return next;
+                  })}
+                >
+                  <p className="text-sm text-e3-text">{n.subject}</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-xs text-e3-muted">{n.author}</span>
+                    <span className="text-xs text-e3-muted">{formatDate(n.time)}</span>
+                  </div>
+                  {isOpen && body && (
+                    <p className="text-xs text-e3-muted mt-2 whitespace-pre-line leading-relaxed border-t border-e3-border pt-2">
+                      {body}
+                    </p>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

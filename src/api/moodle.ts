@@ -95,15 +95,21 @@ export async function getNews(): Promise<{ subject: string; message: string; aut
   const courseMap = new Map(courses.map(c => [c.id, c.fullname]));
 
   const since = Math.floor(Date.now() / 1000) - 30 * 86400;
-  const allNews: { subject: string; message: string; author: string; time: number; courseName: string }[] = [];
 
-  for (const forum of newsForums) {
-    const result = await call<{ discussions: { subject: string; message: string; userfullname: string; timemodified: number }[] }>(
-      'mod_forum_get_forum_discussions',
-      { forumid: forum.id, sortorder: -1, page: 0, perpage: 10 },
-    );
+  const results = await Promise.all(
+    newsForums.map(forum =>
+      call<{ discussions: { subject: string; message: string; userfullname: string; timemodified: number }[] }>(
+        'mod_forum_get_forum_discussions',
+        { forumid: forum.id, sortorder: -1, page: 0, perpage: 10 },
+      ).then(result => ({ forum, discussions: result.discussions }))
+       .catch(() => ({ forum, discussions: [] as { subject: string; message: string; userfullname: string; timemodified: number }[] }))
+    )
+  );
+
+  const allNews: { subject: string; message: string; author: string; time: number; courseName: string }[] = [];
+  for (const { forum, discussions } of results) {
     const name = courseMap.get(forum.course) ?? '';
-    for (const d of result.discussions) {
+    for (const d of discussions) {
       if (d.timemodified < since) continue;
       allNews.push({ subject: d.subject, message: d.message, author: d.userfullname, time: d.timemodified, courseName: name });
     }

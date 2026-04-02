@@ -10,7 +10,6 @@ export function PullToRefresh({ onRefresh, children }: { onRefresh: () => Promis
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     if (refreshing) return;
-    // Only activate when scrolled to top
     const el = e.currentTarget;
     if (el.scrollTop > 0) return;
     startY.current = e.touches[0].clientY;
@@ -45,10 +44,10 @@ export function PullToRefresh({ onRefresh, children }: { onRefresh: () => Promis
       onTouchEnd={onTouchEnd}
     >
       <div
-        className="flex justify-center items-center overflow-hidden transition-[height] text-e3-muted text-xs"
-        style={{ height: pullY > 0 ? pullY : 0, transitionDuration: pulling.current ? '0ms' : '200ms' }}
+        className="flex justify-center items-center overflow-hidden text-e3-muted text-xs"
+        style={{ height: pullY > 0 ? pullY : 0, transition: pulling.current ? 'none' : 'height 200ms' }}
       >
-        {refreshing ? '更新中...' : pullY >= THRESHOLD ? '放開更新' : '下拉更新'}
+        {refreshing ? '更新中...' : pullY >= THRESHOLD ? '放開更新' : '↓ 下拉更新'}
       </div>
       {children}
     </div>

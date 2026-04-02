@@ -17,7 +17,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen bg-e3-bg pb-20">
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/courses" element={<CoursesPage />} />

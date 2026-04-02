@@ -42,37 +42,41 @@ export function HomePage() {
 
   return (
     <PullToRefresh onRefresh={load}>
-    <div className="p-4 space-y-6">
+    <div className="px-4 pt-2 pb-4 space-y-5">
       {/* Header */}
       <div>
-        <p className="text-e3-muted text-xs">NYCU E3</p>
-        <h1 className="text-xl font-bold text-e3-text mt-0.5">{fullname}</h1>
+        <p className="text-[28px] font-bold text-e3-text">{fullname}</p>
       </div>
 
       {/* Assignments */}
       <section>
-        <h2 className="text-sm font-semibold text-e3-text mb-3">
-          未繳作業
+        <div className="flex items-baseline justify-between mb-2 px-1">
+          <h2 className="text-[13px] font-medium text-e3-muted uppercase tracking-wide">
+            未繳作業
+          </h2>
           {assignments.length > 0 && (
-            <span className="ml-2 bg-e3-danger/20 text-e3-danger text-xs px-1.5 py-0.5 rounded-full">
+            <span className="text-[13px] font-medium text-e3-danger">
               {assignments.length}
             </span>
           )}
-        </h2>
+        </div>
 
         {loading ? (
-          <div className="space-y-3">
+          <div className="bg-e3-card rounded-xl overflow-hidden">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-e3-card rounded-xl p-4 animate-pulse">
-                <div className="h-4 bg-e3-border rounded w-3/4 mb-2" />
-                <div className="h-3 bg-e3-border rounded w-1/2" />
+              <div key={i} className="px-4 py-3.5 animate-pulse">
+                <div className="h-4 bg-e3-bg rounded w-3/4 mb-2" />
+                <div className="h-3 bg-e3-bg rounded w-1/2" />
+                {i < 3 && <div className="border-b border-e3-separator mt-3.5 -mx-4 ml-0" />}
               </div>
             ))}
           </div>
         ) : assignments.length === 0 ? (
-          <p className="text-sm text-e3-muted text-center py-8">沒有未繳作業</p>
+          <div className="bg-e3-card rounded-xl px-4 py-6">
+            <p className="text-[15px] text-e3-muted text-center">沒有未繳作業</p>
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="bg-e3-card rounded-xl overflow-hidden divide-y divide-e3-separator">
             {assignments.map(a => <AssignmentCard key={a.id} a={a} />)}
           </div>
         )}
@@ -81,31 +85,33 @@ export function HomePage() {
       {/* News */}
       {news.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-e3-text mb-3">最新公告 ({news.length})</h2>
-          <div className="space-y-2">
+          <h2 className="text-[13px] font-medium text-e3-muted uppercase tracking-wide mb-2 px-1">
+            最新公告
+          </h2>
+          <div className="bg-e3-card rounded-xl overflow-hidden divide-y divide-e3-separator">
             {news.map((n, i) => {
               const isOpen = expandedNews.has(i);
               const body = stripHtml(n.message);
               return (
                 <div
                   key={i}
-                  className="bg-e3-card rounded-xl p-4 cursor-pointer active:bg-e3-border transition-colors"
+                  className="px-4 py-3 cursor-pointer active:bg-e3-bg transition-colors"
                   onClick={() => setExpandedNews(prev => {
                     const next = new Set(prev);
                     if (next.has(i)) next.delete(i); else next.add(i);
                     return next;
                   })}
                 >
-                  <p className="text-sm text-e3-text">{n.subject}</p>
+                  <p className="text-[15px] text-e3-text">{n.subject}</p>
                   {n.courseName && (
-                    <p className="text-xs text-e3-accent mt-1">{n.courseName.split('.').pop()?.trim()}</p>
+                    <p className="text-[13px] text-e3-accent mt-0.5">{n.courseName.split('.').pop()?.trim()}</p>
                   )}
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-xs text-e3-muted">{n.author}</span>
-                    <span className="text-xs text-e3-muted">{formatDate(n.time)}</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[13px] text-e3-muted">{n.author}</span>
+                    <span className="text-[13px] text-e3-muted">{formatDate(n.time)}</span>
                   </div>
                   {isOpen && body && (
-                    <p className="text-xs text-e3-muted mt-2 whitespace-pre-line leading-relaxed border-t border-e3-border pt-2">
+                    <p className="text-[13px] text-e3-muted mt-2 whitespace-pre-line leading-relaxed border-t border-e3-separator pt-2">
                       {body}
                     </p>
                   )}

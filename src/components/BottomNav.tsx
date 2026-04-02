@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const tabs = [
@@ -13,7 +12,7 @@ export function BottomNav() {
   const navigate = useNavigate();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-e3-card border-t border-e3-border pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-0 right-0 bg-e3-nav backdrop-blur-xl border-t border-e3-separator pb-[env(safe-area-inset-bottom)]">
       <div className="flex">
         {tabs.map((tab) => {
           const active = location.pathname === tab.path;
@@ -21,14 +20,14 @@ export function BottomNav() {
             <button
               key={tab.path}
               onClick={() => navigate(tab.path)}
-              className={`flex-1 flex flex-col items-center py-2 transition-colors ${
+              className={`flex-1 flex flex-col items-center pt-1.5 pb-1 cursor-pointer ${
                 active ? 'text-e3-accent' : 'text-e3-muted'
               }`}
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 2 : 1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
               </svg>
-              <span className="text-[10px] mt-0.5">{tab.label}</span>
+              <span className="text-[10px] mt-0.5 font-medium">{tab.label}</span>
             </button>
           );
         })}

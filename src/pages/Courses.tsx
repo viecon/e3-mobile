@@ -26,30 +26,36 @@ export function CoursesPage() {
 
   return (
     <PullToRefresh onRefresh={refresh}>
-    <div className="p-4">
-      <h1 className="text-lg font-bold text-e3-text mb-4">課程</h1>
+    <div className="px-4 pt-2 pb-4">
+      <h1 className="text-[28px] font-bold text-e3-text mb-4">課程</h1>
 
       {loading ? (
-        <div className="space-y-2">
+        <div className="bg-e3-card rounded-xl overflow-hidden">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="bg-e3-card rounded-xl p-4 animate-pulse">
-              <div className="h-4 bg-e3-border rounded w-3/4 mb-2" />
-              <div className="h-3 bg-e3-border rounded w-1/3" />
+            <div key={i} className="px-4 py-3 animate-pulse">
+              <div className="h-4 bg-e3-bg rounded w-3/4 mb-1.5" />
+              <div className="h-3 bg-e3-bg rounded w-1/3" />
+              {i < 5 && <div className="border-b border-e3-separator mt-3 -mx-4 ml-0" />}
             </div>
           ))}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="bg-e3-card rounded-xl overflow-hidden divide-y divide-e3-separator">
           {courses.map(c => (
             <a
               key={c.id}
               href={`https://e3p.nycu.edu.tw/course/view.php?id=${c.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="block bg-e3-card rounded-xl p-4 active:bg-e3-border transition-colors"
+              className="flex items-center justify-between px-4 py-3 cursor-pointer active:bg-e3-bg transition-colors"
             >
-              <p className="text-sm font-medium text-e3-text">{c.fullname}</p>
-              <p className="text-xs text-e3-muted mt-1">{c.shortname}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] text-e3-text">{c.fullname}</p>
+                <p className="text-[13px] text-e3-muted mt-0.5">{c.shortname}</p>
+              </div>
+              <svg className="w-4 h-4 text-e3-muted shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
             </a>
           ))}
         </div>

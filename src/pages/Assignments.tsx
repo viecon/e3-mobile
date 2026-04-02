@@ -26,22 +26,25 @@ export function AssignmentsPage() {
 
   return (
     <PullToRefresh onRefresh={refresh}>
-    <div className="p-4">
-      <h1 className="text-lg font-bold text-e3-text mb-4">未繳作業</h1>
+    <div className="px-4 pt-2 pb-4">
+      <h1 className="text-[28px] font-bold text-e3-text mb-4">未繳作業</h1>
 
       {loading ? (
-        <div className="space-y-2">
+        <div className="bg-e3-card rounded-xl overflow-hidden">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-e3-card rounded-xl p-4 animate-pulse">
-              <div className="h-4 bg-e3-border rounded w-3/4 mb-2" />
-              <div className="h-3 bg-e3-border rounded w-1/2" />
+            <div key={i} className="px-4 py-3 animate-pulse">
+              <div className="h-4 bg-e3-bg rounded w-3/4 mb-1.5" />
+              <div className="h-3 bg-e3-bg rounded w-1/2" />
+              {i < 3 && <div className="border-b border-e3-separator mt-3 -mx-4 ml-0" />}
             </div>
           ))}
         </div>
       ) : assignments.length === 0 ? (
-        <p className="text-sm text-e3-muted text-center py-12">沒有未繳作業</p>
+        <div className="bg-e3-card rounded-xl px-4 py-8">
+          <p className="text-[15px] text-e3-muted text-center">沒有未繳作業</p>
+        </div>
       ) : (
-        <div className="space-y-2">
+        <div className="bg-e3-card rounded-xl overflow-hidden divide-y divide-e3-separator">
           {assignments.map(a => <AssignmentCard key={a.id} a={a} />)}
         </div>
       )}

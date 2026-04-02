@@ -33,7 +33,10 @@ export function NotificationsPage() {
       ? notifs.filter(n => !n.courseName)
       : notifs.filter(n => n.courseName === filter);
 
-  const chipLabel = (fullname: string) => fullname.split('.').pop()?.trim() || fullname;
+  const chipLabel = (fullname: string) => {
+    const name = fullname.split('.').pop()?.trim() || fullname;
+    return name.length > 8 ? name.slice(0, 8) + '...' : name;
+  };
 
   return (
     <PullToRefresh onRefresh={refresh}>

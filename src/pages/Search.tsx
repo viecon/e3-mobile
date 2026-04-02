@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getCached } from '@/lib/cache';
 import { formatDate } from '@/lib/time';
 import { stripHtml } from '@/lib/html';
@@ -15,6 +16,7 @@ interface SearchResult {
 }
 
 export function SearchPage() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
@@ -54,7 +56,14 @@ export function SearchPage() {
 
   return (
     <div className="px-4 pt-2 pb-4">
-      <h1 className="text-[28px] font-bold text-e3-text mb-3">搜尋</h1>
+      <div className="flex items-center gap-2 mb-3">
+        <button onClick={() => navigate(-1)} className="text-e3-accent cursor-pointer">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h1 className="text-[17px] font-semibold text-e3-text">搜尋</h1>
+      </div>
 
       <div className="bg-e3-card rounded-lg px-3 py-2 mb-4">
         <input

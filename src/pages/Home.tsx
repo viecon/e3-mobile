@@ -47,8 +47,8 @@ export function HomePage() {
     <div className="px-4 pt-2 pb-4 space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-[28px] font-bold text-e3-text">{fullname}</p>
-        <div className="flex items-center gap-2">
+        <p className="text-[22px] font-bold text-e3-text min-w-0">{fullname}</p>
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => navigate('/search')}
             className="text-e3-muted bg-e3-card w-8 h-8 rounded-full flex items-center justify-center cursor-pointer active:opacity-60"

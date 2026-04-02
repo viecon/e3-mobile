@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getCalendarEvents, type Assignment } from '@/api/moodle';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { getCached, setCache } from '@/lib/cache';
@@ -13,6 +14,7 @@ function sameDay(a: Date, b: Date): boolean {
 }
 
 export function CalendarPage() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<Assignment[]>(cachedEvents ?? []);
   const [loading, setLoading] = useState(cachedEvents === null);
   const [viewDate, setViewDate] = useState(new Date());
@@ -72,9 +74,14 @@ export function CalendarPage() {
   return (
     <PullToRefresh onRefresh={refresh}>
     <div className="px-4 pt-2 pb-4">
-      {/* Month nav */}
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={prevMonth} className="text-e3-accent p-1 cursor-pointer active:opacity-60">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <button onClick={() => navigate(-1)} className="text-e3-accent cursor-pointer">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button onClick={prevMonth} className="text-e3-accent p-1 cursor-pointer active:opacity-60 ml-auto">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>

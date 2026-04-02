@@ -117,6 +117,10 @@ export async function getGrades(): Promise<CourseGrade[]> {
     )
   );
 
+  const decodeHtml = (s: string) => s.replace(/<[^>]*>/g, '').replace(/&ndash;/g, '–').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').trim();
+
+  const skipPatterns = ['手動項目', '計算出的成績', '個人微調', '全班微調', '依配分計算'];
+
   return results.filter(Boolean).map(r => {
     const { course, table } = r!;
     const rows = table.tabledata || [];
@@ -125,21 +129,25 @@ export async function getGrades(): Promise<CourseGrade[]> {
 
     for (const row of rows) {
       if (!row.itemname?.content) continue;
-      const name = row.itemname.content.replace(/<[^>]*>/g, '').trim();
-      const grade = row.grade?.content?.replace(/<[^>]*>/g, '').trim() || '-';
-      const pct = row.percentage?.content?.replace(/<[^>]*>/g, '').trim() || '-';
-      const range = row.range?.content?.replace(/<[^>]*>/g, '').trim() || '';
+      const name = decodeHtml(row.itemname.content);
+      const grade = decodeHtml(row.grade?.content || '-') || '-';
+      const pct = decodeHtml(row.percentage?.content || '-') || '-';
+      const range = decodeHtml(row.range?.content || '');
       const grademax = range.split('–').pop()?.trim() || '100';
 
       if (name.toLowerCase().includes('course total') || name.includes('課程總分')) {
         total = grade !== '-' ? grade : pct;
-      } else {
-        items.push({ itemname: name, grade, grademax, percentage: pct });
+        continue;
       }
+
+      if (skipPatterns.some(p => name.includes(p))) continue;
+      if (name === course.fullname || name === course.shortname) continue;
+
+      items.push({ itemname: name, grade, grademax, percentage: pct });
     }
 
     return { courseid: course.id, courseName: course.fullname, items, total };
-  }).filter(g => g.items.length > 0);
+  }).filter(g => g.items.length > 0 && g.items.some(i => i.grade !== '-'));
 }
 
 export interface CourseModule {

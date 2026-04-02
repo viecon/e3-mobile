@@ -104,20 +104,49 @@ export async function getNews(): Promise<{ subject: string; message: string; aut
   return allNews.sort((a, b) => b.time - a.time);
 }
 
-export async function getNotifications(): Promise<{ id: number; subject: string; message: string; time: number; read: boolean }[]> {
+export interface Notification {
+  id: number;
+  subject: string;
+  message: string;
+  time: number;
+  read: boolean;
+  courseName: string | null;
+  courseShortname: string | null;
+}
+
+export async function getNotifications(): Promise<Notification[]> {
   const userid = storage.getUserId();
   if (!userid) return [];
 
-  const result = await call<{ messages: { id: number; subject: string; smallmessage: string; timecreated: number; timeread: number }[] }>(
-    'core_message_get_messages',
-    { useridto: userid, type: 'notifications' as unknown as number, newestfirst: 1, limitnum: 20 },
-  );
+  const [result, courses] = await Promise.all([
+    call<{ messages: { id: number; subject: string; smallmessage: string; fullmessagehtml: string; timecreated: number; timeread: number }[] }>(
+      'core_message_get_messages',
+      { useridto: userid, type: 'notifications' as unknown as number, newestfirst: 1, limitnum: 30 },
+    ),
+    getCourses().catch(() => [] as { id: number; shortname: string; fullname: string }[]),
+  ]);
 
-  return result.messages.map(m => ({
-    id: m.id,
-    subject: m.subject,
-    message: m.smallmessage,
-    time: m.timecreated,
-    read: m.timeread > 0,
-  }));
+  return result.messages.map(m => {
+    // Try to match course from subject (e.g. "1142.515605：公告...")
+    let courseName: string | null = null;
+    let courseShortname: string | null = null;
+
+    for (const c of courses) {
+      if (m.subject.includes(c.shortname) || m.smallmessage.includes(c.shortname)) {
+        courseName = c.fullname;
+        courseShortname = c.shortname;
+        break;
+      }
+    }
+
+    return {
+      id: m.id,
+      subject: m.subject,
+      message: m.smallmessage || m.fullmessagehtml?.replace(/<[^>]*>/g, '').slice(0, 100) || '',
+      time: m.timecreated,
+      read: m.timeread > 0,
+      courseName,
+      courseShortname,
+    };
+  });
 }

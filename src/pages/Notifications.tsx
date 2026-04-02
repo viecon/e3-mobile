@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { getNotifications, type Notification } from '@/api/moodle';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { formatDateTime } from '@/lib/time';
+import { getCached, setCache } from '@/lib/cache';
 
-let cachedNotifs: Notification[] | null = null;
+let cachedNotifs: Notification[] | null = getCached('notifications');
 
 export function NotificationsPage() {
   const [notifs, setNotifs] = useState<Notification[]>(cachedNotifs ?? []);
@@ -15,6 +16,7 @@ export function NotificationsPage() {
     try {
       const n = await getNotifications();
       cachedNotifs = n;
+      setCache('notifications', n);
       setNotifs(n);
     } catch { /* ignore */ }
     setLoading(false);

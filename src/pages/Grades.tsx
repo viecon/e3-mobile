@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { getGrades, type CourseGrade } from '@/api/moodle';
 import { PullToRefresh } from '@/components/PullToRefresh';
+import { getCached, setCache } from '@/lib/cache';
 
-let cachedGrades: CourseGrade[] | null = null;
+let cachedGrades: CourseGrade[] | null = getCached('grades');
 
 export function GradesPage() {
   const [grades, setGrades] = useState<CourseGrade[]>(cachedGrades ?? []);
@@ -13,6 +14,7 @@ export function GradesPage() {
     try {
       const g = await getGrades();
       cachedGrades = g;
+      setCache('grades', g);
       setGrades(g);
     } catch { /* ignore */ }
     setLoading(false);

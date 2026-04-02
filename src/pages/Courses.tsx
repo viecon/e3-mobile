@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { getCourses } from '@/api/moodle';
 import { PullToRefresh } from '@/components/PullToRefresh';
+import { getCached, setCache } from '@/lib/cache';
 
 type Course = { id: number; shortname: string; fullname: string };
-let cachedCourses: Course[] | null = null;
+let cachedCourses: Course[] | null = getCached('courses');
 
 export function CoursesPage() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export function CoursesPage() {
     try {
       const c = await getCourses();
       cachedCourses = c;
+      setCache('courses', c);
       setCourses(c);
     } catch { /* ignore */ }
     setLoading(false);

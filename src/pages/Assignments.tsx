@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { getPendingAssignments, type Assignment } from '@/api/moodle';
 import { AssignmentCard } from '@/components/AssignmentCard';
 import { PullToRefresh } from '@/components/PullToRefresh';
+import { getCached, setCache } from '@/lib/cache';
 
-let cachedAssignments: Assignment[] | null = null;
+let cachedAssignments: Assignment[] | null = getCached('assignments');
 
 export function AssignmentsPage() {
   const [assignments, setAssignments] = useState<Assignment[]>(cachedAssignments ?? []);
@@ -14,6 +15,7 @@ export function AssignmentsPage() {
     try {
       const a = await getPendingAssignments();
       cachedAssignments = a;
+      setCache('assignments', a);
       setAssignments(a);
     } catch { /* ignore */ }
     setLoading(false);

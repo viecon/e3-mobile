@@ -6,14 +6,15 @@ import { PullToRefresh } from '@/components/PullToRefresh';
 import { formatDate } from '@/lib/time';
 import { cycleTheme, getTheme, themeLabel } from '@/lib/theme';
 import * as storage from '@/lib/storage';
+import { getCached, setCache } from '@/lib/cache';
 
 function stripHtml(html: string): string {
   return html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
 }
 
 type NewsItem = { subject: string; message: string; author: string; time: number; courseName: string };
-let cachedAssignments: Assignment[] | null = null;
-let cachedNews: NewsItem[] | null = null;
+let cachedAssignments: Assignment[] | null = getCached('home_assignments');
+let cachedNews: NewsItem[] | null = getCached('home_news');
 
 export function HomePage() {
   const [assignments, setAssignments] = useState<Assignment[]>(cachedAssignments ?? []);
@@ -34,6 +35,8 @@ export function HomePage() {
       ]);
       cachedAssignments = a;
       cachedNews = n;
+      setCache('home_assignments', a);
+      setCache('home_news', n);
       setAssignments(a);
       setNews(n);
     } catch {

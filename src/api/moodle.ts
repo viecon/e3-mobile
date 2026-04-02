@@ -142,6 +142,46 @@ export async function getGrades(): Promise<CourseGrade[]> {
   }).filter(g => g.items.length > 0);
 }
 
+export interface CourseModule {
+  id: number;
+  name: string;
+  modname: string;
+  url?: string;
+  contents?: { filename: string; fileurl: string; filesize: number }[];
+}
+
+export interface CourseSection {
+  id: number;
+  name: string;
+  summary: string;
+  modules: CourseModule[];
+}
+
+export async function getCourseContent(courseid: number): Promise<CourseSection[]> {
+  return call<CourseSection[]>('core_course_get_contents', { courseid });
+}
+
+export async function getCourseNews(courseid: number): Promise<{ subject: string; message: string; author: string; time: number }[]> {
+  const forums = await call<{ id: number; type: string }[]>('mod_forum_get_forums_by_courses', { 'courseids[0]': courseid });
+  const newsForum = forums.find(f => f.type === 'news');
+  if (!newsForum) return [];
+
+  const result = await call<{ discussions: { subject: string; message: string; userfullname: string; timemodified: number }[] }>(
+    'mod_forum_get_forum_discussions',
+    { forumid: newsForum.id, sortorder: -1, page: 0, perpage: 10 },
+  );
+  return result.discussions.map(d => ({ subject: d.subject, message: d.message, author: d.userfullname, time: d.timemodified }));
+}
+
+export async function getCourseAssignments(courseid: number): Promise<Assignment[]> {
+  const now = Math.floor(Date.now() / 1000);
+  const result = await call<{ events: Assignment[] }>('core_calendar_get_action_events_by_timesort', {
+    timesortfrom: now - 30 * 86400,
+    timesortto: now + 120 * 86400,
+  });
+  return result.events.filter(e => e.modulename === 'assign' && e.course?.id === courseid);
+}
+
 export async function getCourses(): Promise<{ id: number; shortname: string; fullname: string }[]> {
   const userid = storage.getUserId();
   if (!userid) throw new MoodleApiError('no_user', 'No user ID');

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { getCourses } from '@/api/moodle';
 import { PullToRefresh } from '@/components/PullToRefresh';
@@ -7,6 +8,7 @@ type Course = { id: number; shortname: string; fullname: string };
 let cachedCourses: Course[] | null = null;
 
 export function CoursesPage() {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>(cachedCourses ?? []);
   const [loading, setLoading] = useState(cachedCourses === null);
 
@@ -42,11 +44,9 @@ export function CoursesPage() {
       ) : (
         <div className="bg-e3-card rounded-xl overflow-hidden divide-y divide-e3-separator">
           {courses.map(c => (
-            <a
+            <div
               key={c.id}
-              href={`https://e3p.nycu.edu.tw/course/view.php?id=${c.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              onClick={() => navigate(`/course/${c.id}?name=${encodeURIComponent(c.fullname)}`)}
               className="flex items-center justify-between px-4 py-3 cursor-pointer active:bg-e3-bg transition-colors"
             >
               <div className="min-w-0 flex-1">
@@ -56,7 +56,7 @@ export function CoursesPage() {
               <svg className="w-4 h-4 text-e3-muted shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
-            </a>
+            </div>
           ))}
         </div>
       )}

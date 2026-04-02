@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 import { getPendingAssignments, getNews, type Assignment } from '@/api/moodle';
 import { AssignmentCard } from '@/components/AssignmentCard';
+import { PullToRefresh } from '@/components/PullToRefresh';
 import { formatDate } from '@/lib/time';
 import * as storage from '@/lib/storage';
 
@@ -40,6 +41,7 @@ export function HomePage() {
   };
 
   return (
+    <PullToRefresh onRefresh={load}>
     <div className="p-4 space-y-6">
       {/* Header */}
       <div>
@@ -49,19 +51,14 @@ export function HomePage() {
 
       {/* Assignments */}
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-e3-text">
-            未繳作業
-            {assignments.length > 0 && (
-              <span className="ml-2 bg-e3-danger/20 text-e3-danger text-xs px-1.5 py-0.5 rounded-full">
-                {assignments.length}
-              </span>
-            )}
-          </h2>
-          <button onClick={load} className="text-xs text-e3-accent active:text-blue-400">
-            重新整理
-          </button>
-        </div>
+        <h2 className="text-sm font-semibold text-e3-text mb-3">
+          未繳作業
+          {assignments.length > 0 && (
+            <span className="ml-2 bg-e3-danger/20 text-e3-danger text-xs px-1.5 py-0.5 rounded-full">
+              {assignments.length}
+            </span>
+          )}
+        </h2>
 
         {loading ? (
           <div className="space-y-3">
@@ -119,5 +116,6 @@ export function HomePage() {
         </section>
       )}
     </div>
+    </PullToRefresh>
   );
 }

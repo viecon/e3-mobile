@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import { getCourses } from '@/api/moodle';
+import { PullToRefresh } from '@/components/PullToRefresh';
 
 type Course = { id: number; shortname: string; fullname: string };
 let cachedCourses: Course[] | null = null;
@@ -9,12 +10,22 @@ export function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>(cachedCourses ?? []);
   const [loading, setLoading] = useState(cachedCourses === null);
 
+  const refresh = async () => {
+    try {
+      const c = await getCourses();
+      cachedCourses = c;
+      setCourses(c);
+    } catch { /* ignore */ }
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!cachedCourses) setLoading(true);
-    getCourses().then(c => { cachedCourses = c; setCourses(c); }).catch(() => {}).finally(() => setLoading(false));
+    refresh();
   }, []);
 
   return (
+    <PullToRefresh onRefresh={refresh}>
     <div className="p-4">
       <h1 className="text-lg font-bold text-e3-text mb-4">課程</h1>
 
@@ -44,5 +55,6 @@ export function CoursesPage() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }

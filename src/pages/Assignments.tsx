@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 import { getPendingAssignments, type Assignment } from '@/api/moodle';
 import { AssignmentCard } from '@/components/AssignmentCard';
+import { PullToRefresh } from '@/components/PullToRefresh';
 
 let cachedAssignments: Assignment[] | null = null;
 
@@ -9,12 +10,22 @@ export function AssignmentsPage() {
   const [assignments, setAssignments] = useState<Assignment[]>(cachedAssignments ?? []);
   const [loading, setLoading] = useState(cachedAssignments === null);
 
+  const refresh = async () => {
+    try {
+      const a = await getPendingAssignments();
+      cachedAssignments = a;
+      setAssignments(a);
+    } catch { /* ignore */ }
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!cachedAssignments) setLoading(true);
-    getPendingAssignments().then(a => { cachedAssignments = a; setAssignments(a); }).catch(() => {}).finally(() => setLoading(false));
+    refresh();
   }, []);
 
   return (
+    <PullToRefresh onRefresh={refresh}>
     <div className="p-4">
       <h1 className="text-lg font-bold text-e3-text mb-4">未繳作業</h1>
 
@@ -35,5 +46,6 @@ export function AssignmentsPage() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }

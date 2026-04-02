@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getNotifications, type Notification } from '@/api/moodle';
+import { PullToRefresh } from '@/components/PullToRefresh';
 import { formatDateTime } from '@/lib/time';
 
 let cachedNotifs: Notification[] | null = null;
@@ -10,9 +11,18 @@ export function NotificationsPage() {
   const [filter, setFilter] = useState('all');
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
+  const refresh = async () => {
+    try {
+      const n = await getNotifications();
+      cachedNotifs = n;
+      setNotifs(n);
+    } catch { /* ignore */ }
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!cachedNotifs) setLoading(true);
-    getNotifications().then(n => { cachedNotifs = n; setNotifs(n); }).catch(() => {}).finally(() => setLoading(false));
+    refresh();
   }, []);
 
   // Unique course names for filter chips
@@ -31,6 +41,7 @@ export function NotificationsPage() {
   };
 
   return (
+    <PullToRefresh onRefresh={refresh}>
     <div className="p-4">
       <h1 className="text-lg font-bold text-e3-text mb-3">通知</h1>
 
@@ -112,5 +123,6 @@ export function NotificationsPage() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }

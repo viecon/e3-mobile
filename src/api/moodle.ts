@@ -88,6 +88,60 @@ export async function login(proxyUrl: string, username: string, password: string
   return { token: data.token, fullname: info.fullname, userid: info.userid };
 }
 
+export interface GradeItem {
+  itemname: string;
+  grade: string;
+  grademax: string;
+  percentage: string;
+}
+
+export interface CourseGrade {
+  courseid: number;
+  courseName: string;
+  items: GradeItem[];
+  total: string;
+}
+
+export async function getGrades(): Promise<CourseGrade[]> {
+  const userid = storage.getUserId();
+  if (!userid) throw new MoodleApiError('no_user', 'No user ID');
+
+  const courses = await getCourses();
+  const results = await Promise.all(
+    courses.map(c =>
+      call<{ tables: { courseid: number; tabledata: { itemname?: { content: string }; grade?: { content: string }; percentage?: { content: string }; range?: { content: string } }[] }[] }>(
+        'gradereport_user_get_grades_table',
+        { userid, courseid: c.id },
+      ).then(r => ({ course: c, table: r.tables[0] }))
+       .catch(() => null)
+    )
+  );
+
+  return results.filter(Boolean).map(r => {
+    const { course, table } = r!;
+    const rows = table.tabledata || [];
+    const items: GradeItem[] = [];
+    let total = '-';
+
+    for (const row of rows) {
+      if (!row.itemname?.content) continue;
+      const name = row.itemname.content.replace(/<[^>]*>/g, '').trim();
+      const grade = row.grade?.content?.replace(/<[^>]*>/g, '').trim() || '-';
+      const pct = row.percentage?.content?.replace(/<[^>]*>/g, '').trim() || '-';
+      const range = row.range?.content?.replace(/<[^>]*>/g, '').trim() || '';
+      const grademax = range.split('–').pop()?.trim() || '100';
+
+      if (name.toLowerCase().includes('course total') || name.includes('課程總分')) {
+        total = grade !== '-' ? grade : pct;
+      } else {
+        items.push({ itemname: name, grade, grademax, percentage: pct });
+      }
+    }
+
+    return { courseid: course.id, courseName: course.fullname, items, total };
+  }).filter(g => g.items.length > 0);
+}
+
 export async function getCourses(): Promise<{ id: number; shortname: string; fullname: string }[]> {
   const userid = storage.getUserId();
   if (!userid) throw new MoodleApiError('no_user', 'No user ID');

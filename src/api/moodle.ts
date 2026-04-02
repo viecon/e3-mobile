@@ -32,7 +32,7 @@ async function rawCall<T>(wsfunction: string, params: Record<string, string | nu
   }
 }
 
-let refreshing: Promise<void> | null = null;
+let refreshing: Promise<boolean> | null = null;
 
 async function tryAutoRelogin(): Promise<boolean> {
   const proxyUrl = storage.getProxyUrl();
@@ -40,16 +40,21 @@ async function tryAutoRelogin(): Promise<boolean> {
   const password = storage.get('password');
   if (!proxyUrl || !username || !password) return false;
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+
   try {
     const loginUrl = `${proxyUrl}/login/token.php`;
     const body = new URLSearchParams({ username, password, service: 'moodle_mobile_app' });
-    const res = await fetch(loginUrl, { method: 'POST', body });
+    const res = await fetch(loginUrl, { method: 'POST', body, signal: controller.signal });
     const data = await res.json() as { token?: string };
     if (!data.token) return false;
     storage.set('token', data.token);
     return true;
   } catch {
     return false;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -58,8 +63,9 @@ async function call<T>(wsfunction: string, params: Record<string, string | numbe
     return await rawCall<T>(wsfunction, params);
   } catch (err) {
     if (err instanceof MoodleApiError && err.code === 'invalidtoken') {
-      if (!refreshing) refreshing = tryAutoRelogin().then(ok => { refreshing = null; if (!ok) throw err; });
-      await refreshing;
+      const pending = refreshing ?? (refreshing = tryAutoRelogin().finally(() => { refreshing = null; }));
+      const ok = await pending;
+      if (!ok) throw err;
       return rawCall<T>(wsfunction, params);
     }
     throw err;

@@ -7,10 +7,7 @@ import { PullToRefresh } from '@/components/PullToRefresh';
 import { formatDate } from '@/lib/time';
 import * as storage from '@/lib/storage';
 import { getCached, setCache } from '@/lib/cache';
-
-function stripHtml(html: string): string {
-  return html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
-}
+import { stripHtml } from '@/lib/html';
 
 type NewsItem = { subject: string; message: string; author: string; time: number; courseName: string };
 let cachedAssignments: Assignment[] | null = getCached('home_assignments');
@@ -20,7 +17,7 @@ export function HomePage() {
   const [assignments, setAssignments] = useState<Assignment[]>(cachedAssignments ?? []);
   const [news, setNews] = useState<NewsItem[]>(cachedNews ?? []);
   const [loading, setLoading] = useState(cachedAssignments === null);
-  const [expandedNews, setExpandedNews] = useState<Set<number>>(new Set());
+  const [expandedNews, setExpandedNews] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const fullname = storage.get('fullname') || '';
 
@@ -121,16 +118,17 @@ export function HomePage() {
             最新公告
           </h2>
           <div className="bg-e3-card rounded-xl overflow-hidden divide-y divide-e3-separator">
-            {news.map((n, i) => {
-              const isOpen = expandedNews.has(i);
+            {news.map((n) => {
+              const key = `${n.time}-${n.subject}`;
+              const isOpen = expandedNews.has(key);
               const body = stripHtml(n.message);
               return (
                 <div
-                  key={i}
+                  key={key}
                   className="px-4 py-3 cursor-pointer active:bg-e3-bg transition-colors"
                   onClick={() => setExpandedNews(prev => {
                     const next = new Set(prev);
-                    if (next.has(i)) next.delete(i); else next.add(i);
+                    if (next.has(key)) next.delete(key); else next.add(key);
                     return next;
                   })}
                 >

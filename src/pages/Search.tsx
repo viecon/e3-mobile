@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { getCached } from '@/lib/cache';
 import { formatDate } from '@/lib/time';
+import { stripHtml } from '@/lib/html';
 import type { Notification } from '@/api/moodle';
 
 type NewsItem = { subject: string; message: string; author: string; time: number; courseName: string };
@@ -11,10 +12,6 @@ interface SearchResult {
   subtitle: string;
   time: number;
   body?: string;
-}
-
-function stripHtml(html: string): string {
-  return html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
 }
 
 export function SearchPage() {

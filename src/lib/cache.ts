@@ -11,6 +11,7 @@ export function getCached<T>(key: string): T | null {
     const raw = localStorage.getItem(PREFIX + key);
     if (!raw) return null;
     const entry = JSON.parse(raw) as CacheEntry<T>;
+    if (Date.now() - entry.ts > TTL) return null;
     return entry.data;
   } catch {
     return null;
@@ -27,15 +28,4 @@ export function setCache<T>(key: string, data: T): void {
 export function clearAll(): void {
   const keys = Object.keys(localStorage).filter(k => k.startsWith(PREFIX));
   for (const k of keys) localStorage.removeItem(k);
-}
-
-export function isFresh(key: string): boolean {
-  try {
-    const raw = localStorage.getItem(PREFIX + key);
-    if (!raw) return false;
-    const entry = JSON.parse(raw) as CacheEntry<unknown>;
-    return Date.now() - entry.ts < TTL;
-  } catch {
-    return false;
-  }
 }

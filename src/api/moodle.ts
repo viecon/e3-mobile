@@ -181,13 +181,20 @@ export async function getCourseNews(courseid: number): Promise<{ subject: string
   return result.discussions.map(d => ({ subject: d.subject, message: d.message, author: d.userfullname, time: d.timemodified }));
 }
 
-export async function getCourseAssignments(courseid: number): Promise<Assignment[]> {
-  const now = Math.floor(Date.now() / 1000);
-  const result = await call<{ events: Assignment[] }>('core_calendar_get_action_events_by_timesort', {
-    timesortfrom: now - 30 * 86400,
-    timesortto: now + 120 * 86400,
-  });
-  return result.events.filter(e => e.modulename === 'assign' && e.course?.id === courseid);
+export interface CourseAssignment {
+  id: number;
+  name: string;
+  duedate: number;
+  intro: string;
+}
+
+export async function getCourseAssignments(courseid: number): Promise<CourseAssignment[]> {
+  const result = await call<{ courses: { id: number; assignments: CourseAssignment[] }[] }>(
+    'mod_assign_get_assignments',
+    { 'courseids[0]': courseid },
+  );
+  const course = result.courses.find(c => c.id === courseid);
+  return (course?.assignments || []).sort((a, b) => b.duedate - a.duedate);
 }
 
 export async function getCourses(): Promise<{ id: number; shortname: string; fullname: string }[]> {

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCourseNews, getCourseAssignments, getCourseContent, type Assignment, type CourseSection } from '@/api/moodle';
-import { AssignmentCard } from '@/components/AssignmentCard';
+import { getCourseNews, getCourseAssignments, getCourseContent, type CourseAssignment, type CourseSection } from '@/api/moodle';
 import { PullToRefresh } from '@/components/PullToRefresh';
-import { formatDate } from '@/lib/time';
+import { formatDate, formatDateTime, timeLeft, urgencyColor } from '@/lib/time';
 import * as storage from '@/lib/storage';
 
 function fileSize(bytes: number): string {
@@ -30,7 +29,7 @@ export function CourseDetailPage() {
 
   const [tab, setTab] = useState<Tab>('news');
   const [news, setNews] = useState<{ subject: string; message: string; author: string; time: number }[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignments, setAssignments] = useState<CourseAssignment[]>([]);
   const [sections, setSections] = useState<CourseSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedNews, setExpandedNews] = useState<Set<number>>(new Set());
@@ -142,7 +141,27 @@ export function CourseDetailPage() {
               </div>
             ) : (
               <div className="bg-e3-card rounded-xl overflow-hidden divide-y divide-e3-separator">
-                {assignments.map(a => <AssignmentCard key={a.id} a={a} />)}
+                {assignments.map(a => {
+                  const due = a.duedate > 0 ? timeLeft(a.duedate) : null;
+                  const color = a.duedate > 0 ? urgencyColor(a.duedate) : 'text-e3-muted';
+                  return (
+                    <div key={a.id} className="px-4 py-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[15px] text-e3-text">{a.name}</p>
+                          <p className="text-[13px] text-e3-muted mt-0.5">
+                            {a.duedate > 0 ? formatDateTime(a.duedate) : '無截止日'}
+                          </p>
+                        </div>
+                        {due && (
+                          <span className={`text-[13px] font-medium shrink-0 ${color}`}>
+                            {due.text}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )
           )}

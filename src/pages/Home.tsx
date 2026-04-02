@@ -1,0 +1,92 @@
+import { useState, useEffect } from 'react';
+
+import { getPendingAssignments, getNews, type Assignment } from '@/api/moodle';
+import { AssignmentCard } from '@/components/AssignmentCard';
+import { formatDate } from '@/lib/time';
+import * as storage from '@/lib/storage';
+
+export function HomePage() {
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [news, setNews] = useState<{ subject: string; author: string; time: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const fullname = storage.get('fullname') || '';
+
+  useEffect(() => { load(); }, []);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const [a, n] = await Promise.all([
+        getPendingAssignments(),
+        getNews().catch(() => []),
+      ]);
+      setAssignments(a);
+      setNews(n.slice(0, 3));
+    } catch {
+      // ignore
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="p-4 space-y-6">
+      {/* Header */}
+      <div>
+        <p className="text-e3-muted text-xs">NYCU E3</p>
+        <h1 className="text-xl font-bold text-e3-text mt-0.5">{fullname}</h1>
+      </div>
+
+      {/* Assignments */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-e3-text">
+            未繳作業
+            {assignments.length > 0 && (
+              <span className="ml-2 bg-e3-danger/20 text-e3-danger text-xs px-1.5 py-0.5 rounded-full">
+                {assignments.length}
+              </span>
+            )}
+          </h2>
+          <button onClick={load} className="text-xs text-e3-accent active:text-blue-400">
+            重新整理
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-e3-card rounded-xl p-4 animate-pulse">
+                <div className="h-4 bg-e3-border rounded w-3/4 mb-2" />
+                <div className="h-3 bg-e3-border rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : assignments.length === 0 ? (
+          <p className="text-sm text-e3-muted text-center py-8">沒有未繳作業</p>
+        ) : (
+          <div className="space-y-2">
+            {assignments.map(a => <AssignmentCard key={a.id} a={a} />)}
+          </div>
+        )}
+      </section>
+
+      {/* News */}
+      {news.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-e3-text mb-3">最新公告</h2>
+          <div className="space-y-2">
+            {news.map((n, i) => (
+              <div key={i} className="bg-e3-card rounded-xl p-4">
+                <p className="text-sm text-e3-text">{n.subject}</p>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="text-xs text-e3-muted">{n.author}</span>
+                  <span className="text-xs text-e3-muted">{formatDate(n.time)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}

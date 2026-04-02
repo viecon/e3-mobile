@@ -207,20 +207,18 @@ export async function getCourseAssignments(courseid: number): Promise<CourseAssi
   const assigns = result.courses.find(c => c.id === courseid)?.assignments || [];
   if (assigns.length === 0 || !userid) return assigns.map(a => ({ ...a, submitted: false }));
 
-  // Batch check submission status
-  const params: Record<string, string | number> = { assignmentids: '' };
-  assigns.forEach((a, i) => { params[`assignmentids[${i}]`] = a.id; });
-  const submissions = await call<{ assignments: { assignmentid: number; submissions: { userid: number; status: string }[] }[] }>(
-    'mod_assign_get_submissions',
-    params,
-  ).catch(() => ({ assignments: [] as { assignmentid: number; submissions: { userid: number; status: string }[] }[] }));
+  // Check submission status per assignment (mod_assign_get_submissions requires teacher role)
+  const statuses = await Promise.all(
+    assigns.map(a =>
+      call<{ lastattempt?: { submission?: { status: string } } }>(
+        'mod_assign_get_submission_status',
+        { assignid: a.id, userid },
+      ).then(r => ({ id: a.id, submitted: r.lastattempt?.submission?.status === 'submitted' }))
+       .catch(() => ({ id: a.id, submitted: false }))
+    )
+  );
 
-  const statusMap = new Map<number, boolean>();
-  for (const a of submissions.assignments) {
-    const mine = a.submissions.find(s => s.userid === userid);
-    statusMap.set(a.assignmentid, mine?.status === 'submitted');
-  }
-
+  const statusMap = new Map(statuses.map(s => [s.id, s.submitted]));
   return assigns.map(a => ({ ...a, submitted: statusMap.get(a.id) ?? false })).sort((a, b) => b.duedate - a.duedate);
 }
 

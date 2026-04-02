@@ -15,10 +15,11 @@ export default defineConfig({
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
-        start_url: '/',
+        scope: '/e3-mobile/',
+        start_url: '/e3-mobile/',
         icons: [
-          { src: '/icons/192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/e3-mobile/icons/192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/e3-mobile/icons/512.png', sizes: '512x512', type: 'image/png' },
         ],
       },
       workbox: {

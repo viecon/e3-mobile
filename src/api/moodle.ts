@@ -84,25 +84,28 @@ export async function getPendingAssignments(): Promise<Assignment[]> {
   return result.events.filter(e => e.action?.actionable && e.modulename === 'assign');
 }
 
-export async function getNews(): Promise<{ subject: string; message: string; author: string; time: number }[]> {
+export async function getNews(): Promise<{ subject: string; message: string; author: string; time: number; courseName: string }[]> {
   const courses = await getCourses();
   const courseids = courses.slice(0, 10).map((c, i) => [`courseids[${i}]`, String(c.id)]);
   const params = Object.fromEntries(courseids);
 
-  const forums = await call<{ id: number; type: string }[]>('mod_forum_get_forums_by_courses', params);
+  const forums = await call<{ id: number; course: number; type: string }[]>('mod_forum_get_forums_by_courses', params);
   const newsForums = forums.filter(f => f.type === 'news');
 
+  const courseMap = new Map(courses.map(c => [c.id, c.fullname]));
+
   const since = Math.floor(Date.now() / 1000) - 30 * 86400;
-  const allNews: { subject: string; message: string; author: string; time: number }[] = [];
+  const allNews: { subject: string; message: string; author: string; time: number; courseName: string }[] = [];
 
   for (const forum of newsForums) {
     const result = await call<{ discussions: { subject: string; message: string; userfullname: string; timemodified: number }[] }>(
       'mod_forum_get_forum_discussions',
       { forumid: forum.id, sortorder: -1, page: 0, perpage: 10 },
     );
+    const name = courseMap.get(forum.course) ?? '';
     for (const d of result.discussions) {
       if (d.timemodified < since) continue;
-      allNews.push({ subject: d.subject, message: d.message, author: d.userfullname, time: d.timemodified });
+      allNews.push({ subject: d.subject, message: d.message, author: d.userfullname, time: d.timemodified, courseName: name });
     }
   }
 

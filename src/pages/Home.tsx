@@ -11,7 +11,7 @@ function stripHtml(html: string): string {
 
 export function HomePage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [news, setNews] = useState<{ subject: string; message: string; author: string; time: number }[]>([]);
+  const [news, setNews] = useState<{ subject: string; message: string; author: string; time: number; courseName: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedNews, setExpandedNews] = useState<Set<number>>(new Set());
   const fullname = storage.get('fullname') || '';
@@ -94,6 +94,9 @@ export function HomePage() {
                   })}
                 >
                   <p className="text-sm text-e3-text">{n.subject}</p>
+                  {n.courseName && (
+                    <p className="text-xs text-e3-accent mt-1">{n.courseName.split('.').pop()?.trim()}</p>
+                  )}
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="text-xs text-e3-muted">{n.author}</span>
                     <span className="text-xs text-e3-muted">{formatDate(n.time)}</span>

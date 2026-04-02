@@ -34,8 +34,8 @@ export function NotificationsPage() {
       : notifs.filter(n => n.courseName === filter);
 
   const chipLabel = (fullname: string) => {
-    const last = fullname.split('.').pop() || fullname;
-    return last.match(/[\u4e00-\u9fff]+/g)?.join('').slice(0, 6) || last.slice(0, 10);
+    const last = fullname.split('.').pop()?.trim() || fullname;
+    return last.match(/[\u4e00-\u9fff]+/g)?.join('') || last;
   };
 
   return (

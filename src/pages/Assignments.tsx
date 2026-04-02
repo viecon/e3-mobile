@@ -3,12 +3,15 @@ import { useState, useEffect } from 'react';
 import { getPendingAssignments, type Assignment } from '@/api/moodle';
 import { AssignmentCard } from '@/components/AssignmentCard';
 
+let cachedAssignments: Assignment[] | null = null;
+
 export function AssignmentsPage() {
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [assignments, setAssignments] = useState<Assignment[]>(cachedAssignments ?? []);
+  const [loading, setLoading] = useState(cachedAssignments === null);
 
   useEffect(() => {
-    getPendingAssignments().then(setAssignments).catch(() => {}).finally(() => setLoading(false));
+    if (!cachedAssignments) setLoading(true);
+    getPendingAssignments().then(a => { cachedAssignments = a; setAssignments(a); }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   return (

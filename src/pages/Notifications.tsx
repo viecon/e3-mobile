@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react';
 import { getNotifications, type Notification } from '@/api/moodle';
 import { formatDateTime } from '@/lib/time';
 
+let cachedNotifs: Notification[] | null = null;
+
 export function NotificationsPage() {
-  const [notifs, setNotifs] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [notifs, setNotifs] = useState<Notification[]>(cachedNotifs ?? []);
+  const [loading, setLoading] = useState(cachedNotifs === null);
   const [filter, setFilter] = useState('all');
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    getNotifications().then(setNotifs).catch(() => {}).finally(() => setLoading(false));
+    if (!cachedNotifs) setLoading(true);
+    getNotifications().then(n => { cachedNotifs = n; setNotifs(n); }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   // Unique course names for filter chips

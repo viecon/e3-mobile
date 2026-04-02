@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 
 import { getCourses } from '@/api/moodle';
 
+type Course = { id: number; shortname: string; fullname: string };
+let cachedCourses: Course[] | null = null;
+
 export function CoursesPage() {
-  const [courses, setCourses] = useState<{ id: number; shortname: string; fullname: string }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState<Course[]>(cachedCourses ?? []);
+  const [loading, setLoading] = useState(cachedCourses === null);
 
   useEffect(() => {
-    getCourses().then(setCourses).catch(() => {}).finally(() => setLoading(false));
+    if (!cachedCourses) setLoading(true);
+    getCourses().then(c => { cachedCourses = c; setCourses(c); }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   return (

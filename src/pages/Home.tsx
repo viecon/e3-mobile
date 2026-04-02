@@ -9,22 +9,28 @@ function stripHtml(html: string): string {
   return html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
 }
 
+type NewsItem = { subject: string; message: string; author: string; time: number; courseName: string };
+let cachedAssignments: Assignment[] | null = null;
+let cachedNews: NewsItem[] | null = null;
+
 export function HomePage() {
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [news, setNews] = useState<{ subject: string; message: string; author: string; time: number; courseName: string }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [assignments, setAssignments] = useState<Assignment[]>(cachedAssignments ?? []);
+  const [news, setNews] = useState<NewsItem[]>(cachedNews ?? []);
+  const [loading, setLoading] = useState(cachedAssignments === null);
   const [expandedNews, setExpandedNews] = useState<Set<number>>(new Set());
   const fullname = storage.get('fullname') || '';
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    setLoading(true);
+    if (!cachedAssignments) setLoading(true);
     try {
       const [a, n] = await Promise.all([
         getPendingAssignments(),
         getNews().catch(() => []),
       ]);
+      cachedAssignments = a;
+      cachedNews = n;
       setAssignments(a);
       setNews(n);
     } catch {

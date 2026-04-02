@@ -8,6 +8,7 @@ import { AssignmentsPage } from '@/pages/Assignments';
 import { NotificationsPage } from '@/pages/Notifications';
 import { GradesPage } from '@/pages/Grades';
 import { CourseDetailPage } from '@/pages/CourseDetail';
+import { SearchPage } from '@/pages/Search';
 import { BottomNav } from '@/components/BottomNav';
 import * as storage from '@/lib/storage';
 
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/assignments" element={<AssignmentsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/grades" element={<GradesPage />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <BottomNav />

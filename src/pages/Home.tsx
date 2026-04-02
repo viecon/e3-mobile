@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { getPendingAssignments, getNews, type Assignment } from '@/api/moodle';
 import { AssignmentCard } from '@/components/AssignmentCard';
@@ -22,6 +23,7 @@ export function HomePage() {
   const [loading, setLoading] = useState(cachedAssignments === null);
   const [expandedNews, setExpandedNews] = useState<Set<number>>(new Set());
   const [theme, setThemeState] = useState(getTheme());
+  const navigate = useNavigate();
   const fullname = storage.get('fullname') || '';
 
   useEffect(() => { load(); }, []);
@@ -51,12 +53,22 @@ export function HomePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-[28px] font-bold text-e3-text">{fullname}</p>
-        <button
-          onClick={() => setThemeState(cycleTheme())}
-          className="text-[13px] text-e3-muted bg-e3-card px-2.5 py-1 rounded-full cursor-pointer active:opacity-60"
-        >
-          {themeLabel[theme]}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/search')}
+            className="text-e3-muted bg-e3-card w-8 h-8 rounded-full flex items-center justify-center cursor-pointer active:opacity-60"
+          >
+            <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setThemeState(cycleTheme())}
+            className="text-[13px] text-e3-muted bg-e3-card px-2.5 py-1 rounded-full cursor-pointer active:opacity-60"
+          >
+            {themeLabel[theme]}
+          </button>
+        </div>
       </div>
 
       {/* Assignments */}

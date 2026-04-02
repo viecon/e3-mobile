@@ -184,7 +184,9 @@ export async function getCourseNews(courseid: number): Promise<{ subject: string
     'mod_forum_get_forum_discussions',
     { forumid: newsForum.id, sortorder: -1, page: 0, perpage: 10 },
   );
-  return result.discussions.map(d => ({ subject: d.subject, message: d.message, author: d.userfullname, time: d.timemodified }));
+  return result.discussions
+    .map(d => ({ subject: d.subject, message: d.message, author: d.userfullname, time: d.timemodified }))
+    .sort((a, b) => b.time - a.time);
 }
 
 export interface CourseAssignment {

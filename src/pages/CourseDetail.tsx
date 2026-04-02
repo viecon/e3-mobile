@@ -141,7 +141,7 @@ export function CourseDetailPage() {
               <div className="bg-e3-card rounded-xl overflow-hidden divide-y divide-e3-separator">
                 {assignments.map(a => {
                   const due = a.duedate > 0 ? timeLeft(a.duedate) : null;
-                  const color = a.duedate > 0 ? urgencyColor(a.duedate) : 'text-e3-muted';
+                  const color = a.submitted ? 'text-e3-success' : a.duedate > 0 ? urgencyColor(a.duedate) : 'text-e3-muted';
                   return (
                     <div key={a.id} className="px-4 py-3">
                       <div className="flex items-start justify-between gap-3">
@@ -151,11 +151,9 @@ export function CourseDetailPage() {
                             {a.duedate > 0 ? formatDateTime(a.duedate) : '無截止日'}
                           </p>
                         </div>
-                        {due && (
-                          <span className={`text-[13px] font-medium shrink-0 ${color}`}>
-                            {due.text}
-                          </span>
-                        )}
+                        <span className={`text-[13px] font-medium shrink-0 ${color}`}>
+                          {a.submitted ? '已繳交' : due ? due.text : ''}
+                        </span>
                       </div>
                     </div>
                   );

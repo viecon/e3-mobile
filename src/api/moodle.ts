@@ -191,18 +191,37 @@ export async function getCourseNews(courseid: number): Promise<{ subject: string
 
 export interface CourseAssignment {
   id: number;
+  cmid: number;
   name: string;
   duedate: number;
   intro: string;
+  submitted: boolean;
 }
 
 export async function getCourseAssignments(courseid: number): Promise<CourseAssignment[]> {
-  const result = await call<{ courses: { id: number; assignments: CourseAssignment[] }[] }>(
+  const userid = storage.getUserId();
+  const result = await call<{ courses: { id: number; assignments: { id: number; cmid: number; name: string; duedate: number; intro: string }[] }[] }>(
     'mod_assign_get_assignments',
     { 'courseids[0]': courseid },
   );
-  const course = result.courses.find(c => c.id === courseid);
-  return (course?.assignments || []).sort((a, b) => b.duedate - a.duedate);
+  const assigns = result.courses.find(c => c.id === courseid)?.assignments || [];
+  if (assigns.length === 0 || !userid) return assigns.map(a => ({ ...a, submitted: false }));
+
+  // Batch check submission status
+  const params: Record<string, string | number> = { assignmentids: '' };
+  assigns.forEach((a, i) => { params[`assignmentids[${i}]`] = a.id; });
+  const submissions = await call<{ assignments: { assignmentid: number; submissions: { userid: number; status: string }[] }[] }>(
+    'mod_assign_get_submissions',
+    params,
+  ).catch(() => ({ assignments: [] as { assignmentid: number; submissions: { userid: number; status: string }[] }[] }));
+
+  const statusMap = new Map<number, boolean>();
+  for (const a of submissions.assignments) {
+    const mine = a.submissions.find(s => s.userid === userid);
+    statusMap.set(a.assignmentid, mine?.status === 'submitted');
+  }
+
+  return assigns.map(a => ({ ...a, submitted: statusMap.get(a.id) ?? false })).sort((a, b) => b.duedate - a.duedate);
 }
 
 export async function getCourses(): Promise<{ id: number; shortname: string; fullname: string }[]> {

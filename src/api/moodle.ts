@@ -213,6 +213,15 @@ export interface Assignment {
   instance: number;
 }
 
+export async function getCalendarEvents(): Promise<Assignment[]> {
+  const now = Math.floor(Date.now() / 1000);
+  const result = await call<{ events: Assignment[] }>('core_calendar_get_action_events_by_timesort', {
+    timesortfrom: now - 30 * 86400,
+    timesortto: now + 120 * 86400,
+  });
+  return result.events;
+}
+
 export async function getPendingAssignments(): Promise<Assignment[]> {
   const now = Math.floor(Date.now() / 1000);
   const result = await call<{ events: Assignment[] }>('core_calendar_get_action_events_by_timesort', {

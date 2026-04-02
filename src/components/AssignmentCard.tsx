@@ -16,7 +16,7 @@ export function AssignmentCard({ a }: { a: Assignment }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-e3-text truncate">{a.name}</p>
-          <p className="text-xs text-e3-muted mt-1">{a.course?.shortname}</p>
+          <p className="text-xs text-e3-accent mt-1">{a.course?.fullname?.split('.').pop()?.trim() || a.course?.shortname}</p>
           <p className="text-xs text-e3-muted mt-0.5">{formatDateTime(a.timestart)}</p>
         </div>
         <div className={`text-sm font-semibold shrink-0 ${color}`}>

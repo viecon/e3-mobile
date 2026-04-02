@@ -55,7 +55,12 @@ export async function login(proxyUrl: string, username: string, password: string
 export async function getCourses(): Promise<{ id: number; shortname: string; fullname: string }[]> {
   const userid = storage.getUserId();
   if (!userid) throw new MoodleApiError('no_user', 'No user ID');
-  return call('core_enrol_get_users_courses', { userid });
+  const courses = await call<{ id: number; shortname: string; fullname: string; enddate: number; hidden: boolean }[]>(
+    'core_enrol_get_users_courses',
+    { userid },
+  );
+  const now = Math.floor(Date.now() / 1000);
+  return courses.filter(c => !c.hidden && (c.enddate === 0 || c.enddate > now));
 }
 
 export interface Assignment {

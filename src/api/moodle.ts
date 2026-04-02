@@ -108,6 +108,7 @@ export interface Notification {
   id: number;
   subject: string;
   message: string;
+  body: string;
   time: number;
   read: boolean;
   courseName: string | null;
@@ -119,7 +120,7 @@ export async function getNotifications(): Promise<Notification[]> {
   if (!userid) return [];
 
   const [result, courses] = await Promise.all([
-    call<{ messages: { id: number; subject: string; smallmessage: string; fullmessagehtml: string; timecreated: number; timeread: number }[] }>(
+    call<{ messages: { id: number; subject: string; smallmessage: string; fullmessage: string; fullmessagehtml: string; timecreated: number; timeread: number }[] }>(
       'core_message_get_messages',
       { useridto: userid, type: 'notifications' as unknown as number, newestfirst: 1, limitnum: 30 },
     ),
@@ -139,10 +140,16 @@ export async function getNotifications(): Promise<Notification[]> {
       }
     }
 
+    // Full body: prefer fullmessage (plain text), fallback to stripped HTML
+    const body = m.fullmessage?.trim()
+      || m.fullmessagehtml?.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim()
+      || '';
+
     return {
       id: m.id,
       subject: m.subject,
-      message: m.smallmessage || m.fullmessagehtml?.replace(/<[^>]*>/g, '').slice(0, 100) || '',
+      message: m.smallmessage || body.slice(0, 80),
+      body,
       time: m.timecreated,
       read: m.timeread > 0,
       courseName,

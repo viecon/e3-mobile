@@ -97,7 +97,11 @@ export function NotificationsPage() {
                     {n.courseName.split('.').pop()?.trim()}
                   </p>
                 )}
-                <p className={`text-xs text-e3-muted mt-1 ${isOpen ? '' : 'line-clamp-1'}`}>{n.message}</p>
+                {isOpen && n.body ? (
+                  <p className="text-xs text-e3-muted mt-2 whitespace-pre-line leading-relaxed border-t border-e3-border pt-2">{n.body}</p>
+                ) : (
+                  <p className="text-xs text-e3-muted mt-1 line-clamp-1">{n.message}</p>
+                )}
                 <p className="text-[10px] text-e3-muted/60 mt-1.5">{formatDateTime(n.time)}</p>
               </div>
             );

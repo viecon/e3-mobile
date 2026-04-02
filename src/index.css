@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Light theme (default) */
 :root {
   --e3-bg: #F2F2F7;
   --e3-surface: #FFFFFF;
@@ -16,8 +17,9 @@
   --e3-nav: rgba(249, 249, 249, 0.94);
 }
 
+/* System dark preference */
 @media (prefers-color-scheme: dark) {
-  :root {
+  html:not([data-theme="light"]) {
     --e3-bg: #000000;
     --e3-surface: #1C1C1E;
     --e3-border: #38383A;
@@ -30,6 +32,21 @@
     --e3-success: #30D158;
     --e3-nav: rgba(28, 28, 30, 0.94);
   }
+}
+
+/* Forced dark */
+html[data-theme="dark"] {
+  --e3-bg: #000000;
+  --e3-surface: #1C1C1E;
+  --e3-border: #38383A;
+  --e3-separator: #38383A;
+  --e3-text: #FFFFFF;
+  --e3-secondary: #8E8E93;
+  --e3-accent: #0A84FF;
+  --e3-danger: #FF453A;
+  --e3-warning: #FF9F0A;
+  --e3-success: #30D158;
+  --e3-nav: rgba(28, 28, 30, 0.94);
 }
 
 html, body, #root {

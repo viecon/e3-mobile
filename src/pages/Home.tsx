@@ -4,6 +4,7 @@ import { getPendingAssignments, getNews, type Assignment } from '@/api/moodle';
 import { AssignmentCard } from '@/components/AssignmentCard';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { formatDate } from '@/lib/time';
+import { cycleTheme, getTheme, themeLabel } from '@/lib/theme';
 import * as storage from '@/lib/storage';
 
 function stripHtml(html: string): string {
@@ -19,6 +20,7 @@ export function HomePage() {
   const [news, setNews] = useState<NewsItem[]>(cachedNews ?? []);
   const [loading, setLoading] = useState(cachedAssignments === null);
   const [expandedNews, setExpandedNews] = useState<Set<number>>(new Set());
+  const [theme, setThemeState] = useState(getTheme());
   const fullname = storage.get('fullname') || '';
 
   useEffect(() => { load(); }, []);
@@ -44,8 +46,14 @@ export function HomePage() {
     <PullToRefresh onRefresh={load}>
     <div className="px-4 pt-2 pb-4 space-y-5">
       {/* Header */}
-      <div>
+      <div className="flex items-center justify-between">
         <p className="text-[28px] font-bold text-e3-text">{fullname}</p>
+        <button
+          onClick={() => setThemeState(cycleTheme())}
+          className="text-[13px] text-e3-muted bg-e3-card px-2.5 py-1 rounded-full cursor-pointer active:opacity-60"
+        >
+          {themeLabel[theme]}
+        </button>
       </div>
 
       {/* Assignments */}

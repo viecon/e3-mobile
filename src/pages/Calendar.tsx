@@ -4,6 +4,7 @@ import { getCalendarEvents, type Assignment } from '@/api/moodle';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { getCached, setCache } from '@/lib/cache';
 import { formatDateTime, urgencyColor } from '@/lib/time';
+import { openMoodle } from '@/lib/openMoodle';
 
 let cachedEvents: Assignment[] | null = getCached('calendar');
 
@@ -157,11 +158,9 @@ export function CalendarPage() {
             {selectedEvents.map(e => {
               const color = urgencyColor(e.timestart);
               return (
-                <a
+                <div
                   key={e.id}
-                  href={e.action?.url || e.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  onClick={() => openMoodle(e.action?.url || e.url)}
                   className="block px-4 py-3 cursor-pointer active:bg-e3-bg transition-colors"
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -176,7 +175,7 @@ export function CalendarPage() {
                       {e.modulename}
                     </span>
                   </div>
-                </a>
+                </div>
               );
             })}
           </div>

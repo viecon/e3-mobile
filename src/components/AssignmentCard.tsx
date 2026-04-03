@@ -1,15 +1,14 @@
 import type { Assignment } from '@/api/moodle';
 import { timeLeft, urgencyColor, formatDateTime } from '@/lib/time';
+import { openMoodle } from '@/lib/openMoodle';
 
 export function AssignmentCard({ a }: { a: Assignment }) {
   const due = timeLeft(a.timestart);
   const color = urgencyColor(a.timestart);
 
   return (
-    <a
-      href={a.action?.url || a.url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <div
+      onClick={() => openMoodle(a.action?.url || a.url)}
       className="block bg-e3-card px-4 py-3 cursor-pointer active:bg-e3-bg transition-colors"
     >
       <div className="flex items-start justify-between gap-3">
@@ -22,6 +21,6 @@ export function AssignmentCard({ a }: { a: Assignment }) {
           {due.text}
         </span>
       </div>
-    </a>
+    </div>
   );
 }

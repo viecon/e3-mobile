@@ -236,6 +236,7 @@ export async function getCourses(): Promise<{ id: number; shortname: string; ful
 export interface Assignment {
   id: number;
   name: string;
+  description?: string;
   course?: { id: number; fullname: string; shortname: string };
   timestart: number;
   overdue: boolean;

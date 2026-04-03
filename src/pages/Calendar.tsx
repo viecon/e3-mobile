@@ -4,7 +4,7 @@ import { getCalendarEvents, type Assignment } from '@/api/moodle';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { getCached, setCache } from '@/lib/cache';
 import { formatDateTime, urgencyColor } from '@/lib/time';
-import { openMoodle } from '@/lib/openMoodle';
+import { stripHtml } from '@/lib/html';
 
 let cachedEvents: Assignment[] | null = getCached('calendar');
 
@@ -18,6 +18,7 @@ export function CalendarPage() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<Assignment[]>(cachedEvents ?? []);
   const [loading, setLoading] = useState(cachedEvents === null);
+  const [expandedEvents, setExpandedEvents] = useState<Set<number>>(new Set());
   const [viewDate, setViewDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
@@ -157,24 +158,50 @@ export function CalendarPage() {
           <div className="bg-e3-card rounded-xl overflow-hidden divide-y divide-e3-separator">
             {selectedEvents.map(e => {
               const color = urgencyColor(e.timestart);
+              const isOpen = expandedEvents.has(e.id);
+              const body = e.description ? stripHtml(e.description) : '';
+              const link = e.action?.url || e.url;
               return (
-                <div
-                  key={e.id}
-                  onClick={() => openMoodle(e.action?.url || e.url)}
-                  className="block px-4 py-3 cursor-pointer active:bg-e3-bg transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] text-e3-text">{e.name}</p>
-                      <p className="text-[13px] text-e3-accent mt-0.5">
-                        {e.course?.fullname?.split('.').pop()?.trim() || e.course?.shortname}
-                      </p>
-                      <p className="text-[13px] text-e3-muted">{formatDateTime(e.timestart)}</p>
+                <div key={e.id}>
+                  <div
+                    onClick={() => setExpandedEvents(prev => {
+                      const next = new Set(prev);
+                      if (next.has(e.id)) next.delete(e.id); else next.add(e.id);
+                      return next;
+                    })}
+                    className="px-4 py-3 cursor-pointer active:bg-e3-bg transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] text-e3-text">{e.name}</p>
+                        <p className="text-[13px] text-e3-accent mt-0.5">
+                          {e.course?.fullname?.split('.').pop()?.trim() || e.course?.shortname}
+                        </p>
+                        <p className="text-[13px] text-e3-muted">{formatDateTime(e.timestart)}</p>
+                      </div>
+                      <span className={`text-[11px] font-medium shrink-0 px-1.5 py-0.5 rounded ${color}`}>
+                        {e.modulename}
+                      </span>
                     </div>
-                    <span className={`text-[11px] font-medium shrink-0 px-1.5 py-0.5 rounded ${color}`}>
-                      {e.modulename}
-                    </span>
                   </div>
+                  {isOpen && (
+                    <div className="px-4 pb-3 border-t border-e3-separator pt-2">
+                      {body && (
+                        <p className="text-[13px] text-e3-muted whitespace-pre-line leading-relaxed mb-2">{body}</p>
+                      )}
+                      <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[13px] text-e3-accent font-medium"
+                      >
+                        在 E3 開啟
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                  )}
                 </div>
               );
             })}

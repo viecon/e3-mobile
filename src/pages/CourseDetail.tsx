@@ -5,7 +5,6 @@ import { PullToRefresh } from '@/components/PullToRefresh';
 import { formatDate, formatDateTime, timeLeft, urgencyColor } from '@/lib/time';
 import * as storage from '@/lib/storage';
 import { stripHtml } from '@/lib/html';
-import { openMoodle } from '@/lib/openMoodle';
 
 function fileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -31,6 +30,7 @@ export function CourseDetailPage() {
   const [sections, setSections] = useState<CourseSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedNews, setExpandedNews] = useState<Set<string>>(new Set());
+  const [expandedAssign, setExpandedAssign] = useState<Set<number>>(new Set());
 
   const load = async () => {
     setLoading(true);
@@ -143,19 +143,49 @@ export function CourseDetailPage() {
                 {assignments.map(a => {
                   const due = a.duedate > 0 ? timeLeft(a.duedate) : null;
                   const color = a.submitted ? 'text-e3-success' : a.duedate > 0 ? urgencyColor(a.duedate) : 'text-e3-muted';
+                  const isOpen = expandedAssign.has(a.id);
+                  const body = a.intro ? stripHtml(a.intro) : '';
+                  const e3Url = `https://e3p.nycu.edu.tw/mod/assign/view.php?id=${a.cmid}`;
                   return (
-                    <div key={a.id} className="px-4 py-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[15px] text-e3-text">{a.name}</p>
-                          <p className="text-[13px] text-e3-muted mt-0.5">
-                            {a.duedate > 0 ? formatDateTime(a.duedate) : '無截止日'}
-                          </p>
+                    <div key={a.id}>
+                      <div
+                        className="px-4 py-3 cursor-pointer active:bg-e3-bg transition-colors"
+                        onClick={() => setExpandedAssign(prev => {
+                          const next = new Set(prev);
+                          if (next.has(a.id)) next.delete(a.id); else next.add(a.id);
+                          return next;
+                        })}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[15px] text-e3-text">{a.name}</p>
+                            <p className="text-[13px] text-e3-muted mt-0.5">
+                              {a.duedate > 0 ? formatDateTime(a.duedate) : '無截止日'}
+                            </p>
+                          </div>
+                          <span className={`text-[13px] font-medium shrink-0 ${color}`}>
+                            {a.submitted ? '已繳交' : due ? due.text : ''}
+                          </span>
                         </div>
-                        <span className={`text-[13px] font-medium shrink-0 ${color}`}>
-                          {a.submitted ? '已繳交' : due ? due.text : ''}
-                        </span>
                       </div>
+                      {isOpen && (
+                        <div className="px-4 pb-3 border-t border-e3-separator pt-2">
+                          {body && (
+                            <p className="text-[13px] text-e3-muted whitespace-pre-line leading-relaxed mb-2">{body}</p>
+                          )}
+                          <a
+                            href={e3Url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[13px] text-e3-accent font-medium"
+                          >
+                            在 E3 開啟
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </a>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -213,9 +243,11 @@ export function CourseDetailPage() {
                           });
                         }
                         return (
-                          <div
+                          <a
                             key={m.id}
-                            onClick={() => m.url && openMoodle(m.url)}
+                            href={m.url || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="flex items-center gap-3 px-4 py-2.5 cursor-pointer active:bg-e3-bg transition-colors"
                           >
                             <span className="text-[11px] text-e3-muted bg-e3-bg rounded px-1.5 py-0.5 shrink-0">{m.modname}</span>
@@ -223,7 +255,7 @@ export function CourseDetailPage() {
                             <svg className="w-4 h-4 text-e3-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
-                          </div>
+                          </a>
                         );
                       })}
                     </div>

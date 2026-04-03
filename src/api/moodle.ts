@@ -73,16 +73,22 @@ async function call<T>(wsfunction: string, params: Record<string, string | numbe
 }
 
 export async function getAutoLoginUrl(targetUrl: string): Promise<string> {
-  const proxyUrl = storage.getProxyUrl();
   const userid = storage.getUserId();
-  if (!proxyUrl || !userid) return targetUrl;
+  if (!userid) return targetUrl;
+
+  // Extract the real Moodle site origin from the target URL
+  let siteUrl: string;
+  try {
+    siteUrl = new URL(targetUrl).origin;
+  } catch {
+    return targetUrl;
+  }
 
   try {
     const result = await call<{ key: string; autologinurl: string; warnings: unknown[] }>(
       'tool_mobile_get_autologin_key',
     );
-    const passUrl = `${proxyUrl}/admin/tool/mobile/autologin.php?userid=${userid}&key=${result.key}&urltogo=${encodeURIComponent(targetUrl)}`;
-    return passUrl;
+    return `${siteUrl}/admin/tool/mobile/autologin.php?userid=${userid}&key=${result.key}&urltogo=${encodeURIComponent(targetUrl)}`;
   } catch {
     return targetUrl;
   }

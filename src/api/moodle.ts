@@ -88,8 +88,16 @@ export async function getAutoLoginUrl(targetUrl: string): Promise<string> {
     const result = await call<{ key: string; autologinurl: string; warnings: unknown[] }>(
       'tool_mobile_get_autologin_key',
     );
-    return `${siteUrl}/admin/tool/mobile/autologin.php?userid=${userid}&key=${result.key}&urltogo=${encodeURIComponent(targetUrl)}`;
-  } catch {
+    console.log('[autologin] API response:', result);
+    console.log('[autologin] siteUrl from target:', siteUrl);
+    console.log('[autologin] autologinurl from API:', result.autologinurl);
+    // Use the autologinurl from the API response if available (it has the correct domain)
+    const baseUrl = result.autologinurl || `${siteUrl}/admin/tool/mobile/autologin.php`;
+    const loginUrl = `${baseUrl}?userid=${userid}&key=${result.key}&urltogo=${encodeURIComponent(targetUrl)}`;
+    console.log('[autologin] final URL:', loginUrl);
+    return loginUrl;
+  } catch (err) {
+    console.warn('[autologin] failed:', err);
     return targetUrl;
   }
 }

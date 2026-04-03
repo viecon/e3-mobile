@@ -72,36 +72,6 @@ async function call<T>(wsfunction: string, params: Record<string, string | numbe
   }
 }
 
-export async function getAutoLoginUrl(targetUrl: string): Promise<string> {
-  const userid = storage.getUserId();
-  if (!userid) return targetUrl;
-
-  // Extract the real Moodle site origin from the target URL
-  let siteUrl: string;
-  try {
-    siteUrl = new URL(targetUrl).origin;
-  } catch {
-    return targetUrl;
-  }
-
-  try {
-    const result = await call<{ key: string; autologinurl: string; warnings: unknown[] }>(
-      'tool_mobile_get_autologin_key',
-    );
-    console.log('[autologin] API response:', result);
-    console.log('[autologin] siteUrl from target:', siteUrl);
-    console.log('[autologin] autologinurl from API:', result.autologinurl);
-    // Use the autologinurl from the API response if available (it has the correct domain)
-    const baseUrl = result.autologinurl || `${siteUrl}/admin/tool/mobile/autologin.php`;
-    const loginUrl = `${baseUrl}?userid=${userid}&key=${result.key}&urltogo=${encodeURIComponent(targetUrl)}`;
-    console.log('[autologin] final URL:', loginUrl);
-    return loginUrl;
-  } catch (err) {
-    console.warn('[autologin] failed:', err);
-    return targetUrl;
-  }
-}
-
 export async function login(proxyUrl: string, username: string, password: string): Promise<{ token: string; fullname: string; userid: number }> {
   const loginUrl = `${proxyUrl}/login/token.php`;
   const body = new URLSearchParams({ username, password, service: 'moodle_mobile_app' });

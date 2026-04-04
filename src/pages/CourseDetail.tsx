@@ -209,7 +209,7 @@ export function CourseDetailPage() {
                       <h3 className="text-[13px] font-medium text-e3-muted uppercase tracking-wide mb-2 px-1">{s.name}</h3>
                     )}
                     <div className="bg-e3-card rounded-xl overflow-hidden divide-y divide-e3-separator">
-                      {s.modules.map(m => {
+                      {s.modules.filter(m => m.modname !== 'assign').map(m => {
                         const files = m.contents?.filter(c => c.filesize > 0) || [];
                         if (files.length > 0) {
                           return files.map((f, fi) => {

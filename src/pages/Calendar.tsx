@@ -5,8 +5,8 @@ import { PullToRefresh } from '@/components/PullToRefresh';
 import { getCached, setCache } from '@/lib/cache';
 import { formatDateTime, urgencyColor } from '@/lib/time';
 import { stripHtml } from '@/lib/html';
+import { shortCourseName } from '@/lib/course';
 
-let cachedEvents: Assignment[] | null = getCached('calendar');
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
 
@@ -16,8 +16,8 @@ function sameDay(a: Date, b: Date): boolean {
 
 export function CalendarPage() {
   const navigate = useNavigate();
-  const [events, setEvents] = useState<Assignment[]>(cachedEvents ?? []);
-  const [loading, setLoading] = useState(cachedEvents === null);
+  const [events, setEvents] = useState<Assignment[]>(() => getCached('calendar') ?? []);
+  const [loading, setLoading] = useState(() => getCached('calendar') === null);
   const [expandedEvents, setExpandedEvents] = useState<Set<number>>(new Set());
   const [viewDate, setViewDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -25,7 +25,6 @@ export function CalendarPage() {
   const refresh = async () => {
     try {
       const e = await getCalendarEvents();
-      cachedEvents = e;
       setCache('calendar', e);
       setEvents(e);
     } catch { /* ignore */ }
@@ -33,7 +32,7 @@ export function CalendarPage() {
   };
 
   useEffect(() => {
-    if (!cachedEvents) setLoading(true);
+    if (!getCached('calendar')) setLoading(true);
     refresh();
   }, []);
 
@@ -175,7 +174,7 @@ export function CalendarPage() {
                       <div className="min-w-0 flex-1">
                         <p className="text-[15px] text-e3-text">{e.name}</p>
                         <p className="text-[13px] text-e3-accent mt-0.5">
-                          {e.course?.fullname?.split('.').pop()?.trim() || e.course?.shortname}
+                          {e.course?.fullname ? shortCourseName(e.course.fullname) : e.course?.shortname}
                         </p>
                         <p className="text-[13px] text-e3-muted">{formatDateTime(e.timestart)}</p>
                       </div>

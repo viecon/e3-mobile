@@ -4,6 +4,7 @@ export function stripHtml(html: string): string {
     .replace(/<\/p>/gi, '\n')
     .replace(/<[^>]*>/g, '')
     .replace(/&nbsp;/g, ' ')
+    .replace(/&ndash;/g, '–')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')

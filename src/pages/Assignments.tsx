@@ -5,16 +5,13 @@ import { AssignmentCard } from '@/components/AssignmentCard';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { getCached, setCache } from '@/lib/cache';
 
-let cachedAssignments: Assignment[] | null = getCached('assignments');
-
 export function AssignmentsPage() {
-  const [assignments, setAssignments] = useState<Assignment[]>(cachedAssignments ?? []);
-  const [loading, setLoading] = useState(cachedAssignments === null);
+  const [assignments, setAssignments] = useState<Assignment[]>(() => getCached('assignments') ?? []);
+  const [loading, setLoading] = useState(() => getCached('assignments') === null);
 
   const refresh = async () => {
     try {
       const a = await getPendingAssignments();
-      cachedAssignments = a;
       setCache('assignments', a);
       setAssignments(a);
     } catch { /* ignore */ }
@@ -22,7 +19,7 @@ export function AssignmentsPage() {
   };
 
   useEffect(() => {
-    if (!cachedAssignments) setLoading(true);
+    if (!getCached('assignments')) setLoading(true);
     refresh();
   }, []);
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCached } from '@/lib/cache';
 import { formatDate } from '@/lib/time';
 import { stripHtml } from '@/lib/html';
+import { shortCourseName } from '@/lib/course';
 import type { Notification } from '@/api/moodle';
 
 type NewsItem = { subject: string; message: string; author: string; time: number; courseName: string };
@@ -31,7 +32,7 @@ export function SearchPage() {
         items.push({
           type: 'news',
           title: n.subject,
-          subtitle: n.courseName ? `${n.courseName.split('.').pop()?.trim()} · ${n.author}` : n.author,
+          subtitle: n.courseName ? `${shortCourseName(n.courseName)} · ${n.author}` : n.author,
           time: n.time,
           body: stripHtml(n.message),
         });
@@ -44,7 +45,7 @@ export function SearchPage() {
         items.push({
           type: 'notification',
           title: n.subject,
-          subtitle: n.courseName ? n.courseName.split('.').pop()?.trim() || '' : '系統',
+          subtitle: n.courseName ? shortCourseName(n.courseName) : '系統',
           time: n.time,
           body: n.body,
         });

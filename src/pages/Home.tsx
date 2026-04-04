@@ -8,15 +8,14 @@ import { formatDate } from '@/lib/time';
 import * as storage from '@/lib/storage';
 import { getCached, setCache } from '@/lib/cache';
 import { stripHtml } from '@/lib/html';
+import { shortCourseName } from '@/lib/course';
 
 type NewsItem = { subject: string; message: string; author: string; time: number; courseName: string };
-let cachedAssignments: Assignment[] | null = getCached('home_assignments');
-let cachedNews: NewsItem[] | null = getCached('home_news');
 
 export function HomePage() {
-  const [assignments, setAssignments] = useState<Assignment[]>(cachedAssignments ?? []);
-  const [news, setNews] = useState<NewsItem[]>(cachedNews ?? []);
-  const [loading, setLoading] = useState(cachedAssignments === null);
+  const [assignments, setAssignments] = useState<Assignment[]>(() => getCached('home_assignments') ?? []);
+  const [news, setNews] = useState<NewsItem[]>(() => getCached('home_news') ?? []);
+  const [loading, setLoading] = useState(() => getCached('home_assignments') === null);
   const [expandedNews, setExpandedNews] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const fullname = storage.get('fullname') || '';
@@ -24,21 +23,17 @@ export function HomePage() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    if (!cachedAssignments) setLoading(true);
+    if (!getCached('home_assignments')) setLoading(true);
     try {
       const [a, n] = await Promise.all([
         getPendingAssignments(),
         getNews().catch(() => []),
       ]);
-      cachedAssignments = a;
-      cachedNews = n;
       setCache('home_assignments', a);
       setCache('home_news', n);
       setAssignments(a);
       setNews(n);
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
     setLoading(false);
   };
 
@@ -134,7 +129,7 @@ export function HomePage() {
                 >
                   <p className="text-[15px] text-e3-text">{n.subject}</p>
                   {n.courseName && (
-                    <p className="text-[13px] text-e3-accent mt-0.5">{n.courseName.split('.').pop()?.trim()}</p>
+                    <p className="text-[13px] text-e3-accent mt-0.5">{shortCourseName(n.courseName)}</p>
                   )}
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[13px] text-e3-muted">{n.author}</span>

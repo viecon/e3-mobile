@@ -1,4 +1,5 @@
 import * as storage from '@/lib/storage';
+import { stripHtml } from '@/lib/html';
 
 class MoodleApiError extends Error {
   constructor(public code: string, message: string) {
@@ -113,17 +114,21 @@ export async function getGrades(): Promise<CourseGrade[]> {
   if (!userid) throw new MoodleApiError('no_user', 'No user ID');
 
   const courses = await getCourses();
-  const results = await Promise.all(
-    courses.map(c =>
-      call<{ tables: { courseid: number; tabledata: { itemname?: { content: string }; grade?: { content: string }; percentage?: { content: string }; range?: { content: string } }[] }[] }>(
-        'gradereport_user_get_grades_table',
-        { userid, courseid: c.id },
-      ).then(r => ({ course: c, table: r.tables[0] }))
-       .catch(() => null)
-    )
-  );
-
-  const decodeHtml = (s: string) => s.replace(/<[^>]*>/g, '').replace(/&ndash;/g, '–').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').trim();
+  const results: ({ course: typeof courses[0]; table: { courseid: number; tabledata: { itemname?: { content: string }; grade?: { content: string }; percentage?: { content: string }; range?: { content: string } }[] } } | null)[] = [];
+  // Batch 4 at a time to avoid rate limiting
+  for (let i = 0; i < courses.length; i += 4) {
+    const batch = courses.slice(i, i + 4);
+    const batchResults = await Promise.all(
+      batch.map(c =>
+        call<{ tables: { courseid: number; tabledata: { itemname?: { content: string }; grade?: { content: string }; percentage?: { content: string }; range?: { content: string } }[] }[] }>(
+          'gradereport_user_get_grades_table',
+          { userid, courseid: c.id },
+        ).then(r => ({ course: c, table: r.tables[0] }))
+         .catch(() => null)
+      )
+    );
+    results.push(...batchResults);
+  }
 
   const skipPatterns = ['手動項目', '計算出的成績', '個人微調', '全班微調', '依配分計算'];
 
@@ -135,10 +140,10 @@ export async function getGrades(): Promise<CourseGrade[]> {
 
     for (const row of rows) {
       if (!row.itemname?.content) continue;
-      const name = decodeHtml(row.itemname.content);
-      const grade = decodeHtml(row.grade?.content || '-') || '-';
-      const pct = decodeHtml(row.percentage?.content || '-') || '-';
-      const range = decodeHtml(row.range?.content || '');
+      const name = stripHtml(row.itemname.content);
+      const grade = stripHtml(row.grade?.content || '-') || '-';
+      const pct = stripHtml(row.percentage?.content || '-') || '-';
+      const range = stripHtml(row.range?.content || '');
       const grademax = range.split('–').pop()?.trim() || '100';
 
       if (name.toLowerCase().includes('course total') || name.includes('課程總分')) {
@@ -316,7 +321,7 @@ export async function getNotifications(): Promise<Notification[]> {
   const [result, courses] = await Promise.all([
     call<{ messages: { id: number; subject: string; smallmessage: string; fullmessage: string; fullmessagehtml: string; timecreated: number; timeread: number }[] }>(
       'core_message_get_messages',
-      { useridto: userid, type: 'notifications' as unknown as number, newestfirst: 1, limitnum: 30 },
+      { useridto: userid, type: 'notifications', newestfirst: 1, limitnum: 30 },
     ),
     getCourses().catch(() => [] as { id: number; shortname: string; fullname: string }[]),
   ]);
@@ -336,8 +341,7 @@ export async function getNotifications(): Promise<Notification[]> {
 
     // Full body: prefer fullmessage (plain text), fallback to stripped HTML
     const body = m.fullmessage?.trim()
-      || m.fullmessagehtml?.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim()
-      || '';
+      || (m.fullmessagehtml ? stripHtml(m.fullmessagehtml) : '');
 
     return {
       id: m.id,

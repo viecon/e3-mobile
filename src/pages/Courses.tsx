@@ -6,17 +6,15 @@ import { PullToRefresh } from '@/components/PullToRefresh';
 import { getCached, setCache } from '@/lib/cache';
 
 type Course = { id: number; shortname: string; fullname: string };
-let cachedCourses: Course[] | null = getCached('courses');
 
 export function CoursesPage() {
   const navigate = useNavigate();
-  const [courses, setCourses] = useState<Course[]>(cachedCourses ?? []);
-  const [loading, setLoading] = useState(cachedCourses === null);
+  const [courses, setCourses] = useState<Course[]>(() => getCached('courses') ?? []);
+  const [loading, setLoading] = useState(() => getCached('courses') === null);
 
   const refresh = async () => {
     try {
       const c = await getCourses();
-      cachedCourses = c;
       setCache('courses', c);
       setCourses(c);
     } catch { /* ignore */ }
@@ -24,7 +22,7 @@ export function CoursesPage() {
   };
 
   useEffect(() => {
-    if (!cachedCourses) setLoading(true);
+    if (!getCached('courses')) setLoading(true);
     refresh();
   }, []);
 

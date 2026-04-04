@@ -2,18 +2,16 @@ import { useState, useEffect } from 'react';
 import { getGrades, type CourseGrade } from '@/api/moodle';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { getCached, setCache } from '@/lib/cache';
-
-let cachedGrades: CourseGrade[] | null = getCached('grades');
+import { shortCourseName } from '@/lib/course';
 
 export function GradesPage() {
-  const [grades, setGrades] = useState<CourseGrade[]>(cachedGrades ?? []);
-  const [loading, setLoading] = useState(cachedGrades === null);
+  const [grades, setGrades] = useState<CourseGrade[]>(() => getCached('grades') ?? []);
+  const [loading, setLoading] = useState(() => getCached('grades') === null);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   const refresh = async () => {
     try {
       const g = await getGrades();
-      cachedGrades = g;
       setCache('grades', g);
       setGrades(g);
     } catch { /* ignore */ }
@@ -21,7 +19,7 @@ export function GradesPage() {
   };
 
   useEffect(() => {
-    if (!cachedGrades) setLoading(true);
+    if (!getCached('grades')) setLoading(true);
     refresh();
   }, []);
 
@@ -59,7 +57,7 @@ export function GradesPage() {
                   })}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-[15px] text-e3-text">{g.courseName.split('.').pop()?.trim()}</p>
+                    <p className="text-[15px] text-e3-text">{shortCourseName(g.courseName)}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-[15px] font-medium text-e3-accent">{g.total}</span>

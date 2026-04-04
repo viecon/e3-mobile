@@ -3,19 +3,17 @@ import { getNotifications, type Notification } from '@/api/moodle';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { formatDateTime } from '@/lib/time';
 import { getCached, setCache } from '@/lib/cache';
-
-let cachedNotifs: Notification[] | null = getCached('notifications');
+import { shortCourseName } from '@/lib/course';
 
 export function NotificationsPage() {
-  const [notifs, setNotifs] = useState<Notification[]>(cachedNotifs ?? []);
-  const [loading, setLoading] = useState(cachedNotifs === null);
+  const [notifs, setNotifs] = useState<Notification[]>(() => getCached('notifications') ?? []);
+  const [loading, setLoading] = useState(() => getCached('notifications') === null);
   const [filter, setFilter] = useState('all');
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   const refresh = async () => {
     try {
       const n = await getNotifications();
-      cachedNotifs = n;
       setCache('notifications', n);
       setNotifs(n);
     } catch { /* ignore */ }
@@ -23,7 +21,7 @@ export function NotificationsPage() {
   };
 
   useEffect(() => {
-    if (!cachedNotifs) setLoading(true);
+    if (!getCached('notifications')) setLoading(true);
     refresh();
   }, []);
 
@@ -36,7 +34,7 @@ export function NotificationsPage() {
       : notifs.filter(n => n.courseName === filter);
 
   const chipLabel = (fullname: string) => {
-    const name = fullname.split('.').pop()?.trim() || fullname;
+    const name = shortCourseName(fullname);
     return name.length > 8 ? name.slice(0, 8) + '...' : name;
   };
 
@@ -114,7 +112,7 @@ export function NotificationsPage() {
                     </p>
                     {n.courseName && (
                       <p className="text-[13px] text-e3-accent mt-0.5">
-                        {n.courseName.split('.').pop()?.trim()}
+                        {shortCourseName(n.courseName)}
                       </p>
                     )}
                     {isOpen && n.body ? (

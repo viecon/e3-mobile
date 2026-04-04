@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
 import { login } from '@/api/moodle';
+import * as storage from '@/lib/storage';
 
 export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
-  const [proxyUrl, setProxyUrl] = useState(localStorage.getItem('e3m_proxyUrl') || '');
+  const [proxyUrl, setProxyUrl] = useState(storage.getProxyUrl() || '');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -83,7 +84,7 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
 
         <p className="text-[11px] text-e3-muted text-center leading-relaxed">
           需要先部署 Cloudflare Worker 作為 CORS proxy。<br />
-          密碼不會被儲存，只儲存登入後取得的 token。
+          帳號密碼儲存於本機，用於 token 過期時自動重新登入。
         </p>
       </div>
     </div>
